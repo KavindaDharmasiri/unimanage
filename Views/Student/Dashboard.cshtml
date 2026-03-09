@@ -1,0 +1,90 @@
+@model uniManage.Models.StudentDashboardViewModel
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "Student Dashboard";
+}
+
+<h2>Welcome, @Model.Student.User.FullName</h2>
+<p>Student Number: @Model.Student.StudentNumber</p>
+
+<div class="dashboard-stats">
+    <div class="stat-box">
+        <h3>@Model.Enrollments.Count</h3>
+        <p>Enrolled Courses</p>
+    </div>
+    <div class="stat-box">
+        <h3>@Model.UpcomingAssignments.Count</h3>
+        <p>Upcoming Assignments</p>
+    </div>
+    <div class="stat-box">
+        <h3>@Model.RecentSubmissions.Count</h3>
+        <p>Recent Submissions</p>
+    </div>
+</div>
+
+<div class="section">
+    <h3>My Courses</h3>
+    @if (Model.Enrollments.Any())
+    {
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Course Code</th>
+                    <th>Course Name</th>
+                    <th>Lecturer</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var enrollment in Model.Enrollments)
+                {
+                    <tr>
+                        <td>@enrollment.Course.CourseCode</td>
+                        <td>@enrollment.Course.CourseName</td>
+                        <td>@(enrollment.Course.Lecturer != null && enrollment.Course.Lecturer.User != null ? enrollment.Course.Lecturer.User.FullName : "Not Assigned")</td>
+                        <td>@enrollment.Status</td>
+                        <td><a href="@Url.Action("CourseDetails", "Student", new { id = enrollment.CourseId })" class="btn btn-sm btn-primary">View Details</a></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <p>You are not enrolled in any courses. <a href="@Url.Action("BrowseCourses", "Student")">Browse Courses</a></p>
+    }
+</div>
+
+<div class="section">
+    <h3>Upcoming Assignments</h3>
+    @if (Model.UpcomingAssignments.Any())
+    {
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Assignment</th>
+                    <th>Course</th>
+                    <th>Due Date</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var assignment in Model.UpcomingAssignments)
+                {
+                    <tr>
+                        <td>@assignment.Title</td>
+                        <td>@assignment.Course.CourseName</td>
+                        <td>@assignment.DueDate.ToString("yyyy-MM-dd")</td>
+                        <td><a href="@Url.Action("SubmitAssignment", "Student", new { id = assignment.AssignmentId })" class="btn btn-sm btn-primary">Submit</a></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <p>No upcoming assignments.</p>
+    }
+</div>

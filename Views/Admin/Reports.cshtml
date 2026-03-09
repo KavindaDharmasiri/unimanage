@@ -1,0 +1,26 @@
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "Reports";
+}
+
+<h2>Reports and Analytics</h2>
+
+<div class="reports-menu">
+    <div class="report-card">
+        <h3>Course Popularity Report</h3>
+        <p>View enrollment statistics for all courses</p>
+        <a href="@Url.Action("CoursePopularityReport", "Admin")" class="btn btn-primary">View Report</a>
+    </div>
+
+    <div class="report-card">
+        <h3>Student Performance Report</h3>
+        <p>View average grades and submission statistics</p>
+        <a href="@Url.Action("StudentPerformanceReport", "Admin")" class="btn btn-primary">View Report</a>
+    </div>
+
+    <div class="report-card">
+        <h3>Lecturer Workload Report</h3>
+        <p>View course and student distribution per lecturer</p>
+        <a href="@Url.Action("LecturerWorkloadReport", "Admin")" class="btn btn-primary">View Report</a>
+    </div>
+</div>

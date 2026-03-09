@@ -1,0 +1,141 @@
+@model uniManage.Models.Course
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "Course Details";
+}
+
+<h2>@Model.CourseName (@Model.CourseCode)</h2>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+
+<div class="section">
+    <h3>Course Information</h3>
+    <p><strong>Description:</strong> @Model.Description</p>
+    <p><strong>Credits:</strong> @Model.Credits</p>
+    <p><strong>Enrolled Students:</strong> @Model.Enrollments.Count / @Model.MaxEnrollment</p>
+</div>
+
+<div class="section">
+    <h3>Enrolled Students</h3>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Student Number</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var enrollment in Model.Enrollments)
+            {
+                <tr>
+                    <td>@(enrollment.Student != null ? enrollment.Student.StudentNumber : "N/A")</td>
+                    <td>@(enrollment.Student != null && enrollment.Student.User != null ? enrollment.Student.User.FullName : "N/A")</td>
+                    <td>@(enrollment.Student != null && enrollment.Student.User != null ? enrollment.Student.User.Email : "N/A")</td>
+                    <td>@enrollment.Status</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<div class="section">
+    <h3>Assignments</h3>
+    <a href="@Url.Action("CreateAssignment", "Lecturer", new { courseId = Model.CourseId })" class="btn btn-primary">Create Assignment</a>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Due Date</th>
+                <th>Max Marks</th>
+                <th>Submissions</th>
+                <th>Attachment</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var assignment in Model.Assignments)
+            {
+                <tr>
+                    <td>@assignment.Title</td>
+                    <td>@assignment.DueDate.ToString("yyyy-MM-dd")</td>
+                    <td>@assignment.MaxMarks</td>
+                    <td>@assignment.Submissions.Count</td>
+                    <td>
+                        @if (!string.IsNullOrEmpty(assignment.FilePath))
+                        {
+                            <a href="@assignment.FilePath" download>Download</a>
+                        }
+                        else
+                        {
+                            <span>-</span>
+                        }
+                    </td>
+                    <td>
+                        <a href="@Url.Action("ViewSubmissions", "Lecturer", new { assignmentId = assignment.AssignmentId })" class="btn btn-sm btn-primary">View Submissions</a>
+                        <button type="button" class="btn btn-sm btn-danger" onclick="confirmDelete('@Url.Action("DeleteAssignment", "Lecturer", new { id = assignment.AssignmentId })', 'assignment')">Delete</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<div class="section">
+    <h3>Course Materials</h3>
+    <a href="@Url.Action("UploadMaterial", "Lecturer", new { courseId = Model.CourseId })" class="btn btn-primary">Upload Material</a>
+    @if (Model.Materials != null && Model.Materials.Any())
+    {
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Description</th>
+                    <th>Upload Date</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var material in Model.Materials)
+                {
+                    <tr>
+                        <td>@material.Title</td>
+                        <td>@material.Description</td>
+                        <td>@material.UploadDate.ToString("yyyy-MM-dd")</td>
+                        <td>
+                            <a href="@material.FilePath" class="btn btn-sm btn-primary" download>Download</a>
+                            <button type="button" class="btn btn-sm btn-danger" onclick="confirmDelete('@Url.Action("DeleteMaterial", "Lecturer", new { id = material.MaterialId })', 'material')">Delete</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <p>No materials uploaded yet.</p>
+    }
+</div>
+
+<script>
+function confirmDelete(url, type) {
+    Swal.fire({
+        title: 'Are you sure?',
+        text: `Do you want to delete this ${type}?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Yes, delete it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            window.location.href = url;
+        }
+    });
+}
+</script>

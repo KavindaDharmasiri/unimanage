@@ -1,0 +1,57 @@
+@model List<uniManage.Models.Course>
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "Browse Courses";
+}
+
+<h2>Available Courses</h2>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-error">@TempData["Error"]</div>
+}
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Code</th>
+            <th>Name</th>
+            <th>Credits</th>
+            <th>Lecturer</th>
+            <th>Enrolled/Max</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var course in Model)
+        {
+            <tr>
+                <td>@course.CourseCode</td>
+                <td>@course.CourseName</td>
+                <td>@course.Credits</td>
+                <td>@(course.Lecturer != null && course.Lecturer.User != null ? course.Lecturer.User.FullName : "Not Assigned")</td>
+                <td>@course.Enrollments.Count / @course.MaxEnrollment</td>
+                <td>
+                    @if (((List<int>)ViewBag.EnrolledCourseIds).Contains(course.CourseId))
+                    {
+                        <span class="badge badge-success">Enrolled</span>
+                    }
+                    else
+                    {
+                        using (Html.BeginForm("Enroll", "Student", FormMethod.Post))
+                        {
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="courseId" value="@course.CourseId" />
+                            <button type="submit" class="btn btn-primary btn-sm">Enroll</button>
+                        }
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

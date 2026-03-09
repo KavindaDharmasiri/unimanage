@@ -1,0 +1,50 @@
+@model uniManage.Models.AdminDashboardViewModel
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "Admin Dashboard";
+}
+
+<h2>Administrator Dashboard</h2>
+
+<div class="dashboard-stats">
+    <div class="stat-box">
+        <h3>@Model.TotalStudents</h3>
+        <p>Total Students</p>
+    </div>
+    <div class="stat-box">
+        <h3>@Model.TotalLecturers</h3>
+        <p>Total Lecturers</p>
+    </div>
+    <div class="stat-box">
+        <h3>@Model.TotalCourses</h3>
+        <p>Total Courses</p>
+    </div>
+    <div class="stat-box">
+        <h3>@Model.TotalEnrollments</h3>
+        <p>Total Enrollments</p>
+    </div>
+</div>
+
+<div class="section">
+    <h3>Popular Courses</h3>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Course Code</th>
+                <th>Course Name</th>
+                <th>Enrollments</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var course in Model.PopularCourses)
+            {
+                <tr>
+                    <td>@course.CourseCode</td>
+                    <td>@course.CourseName</td>
+                    <td>@course.Enrollments.Count</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

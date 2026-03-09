@@ -1,0 +1,32 @@
+@model List<uniManage.Models.LecturerReportViewModel>
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "Lecturer Workload Report";
+}
+
+<h2>Lecturer Workload Report</h2>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Lecturer Name</th>
+            <th>Department</th>
+            <th>Total Courses</th>
+            <th>Total Students</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.LecturerName</td>
+                <td>@item.Department</td>
+                <td>@item.CourseCount</td>
+                <td>@item.TotalStudents</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<a href="@Url.Action("Reports", "Admin")" class="btn btn-secondary">Back to Reports</a>

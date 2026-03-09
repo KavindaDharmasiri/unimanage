@@ -1,0 +1,39 @@
+@model List<uniManage.Models.Assignment>
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "My Assignments";
+}
+
+<h2>My Assignments</h2>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Course</th>
+            <th>Due Date</th>
+            <th>Max Marks</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var assignment in Model)
+        {
+            <tr>
+                <td>@assignment.Title</td>
+                <td>@assignment.Course.CourseName</td>
+                <td>@assignment.DueDate.ToString("yyyy-MM-dd HH:mm")</td>
+                <td>@assignment.MaxMarks</td>
+                <td>
+                    <a href="@Url.Action("SubmitAssignment", "Student", new { id = assignment.AssignmentId })" class="btn btn-sm">Submit</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

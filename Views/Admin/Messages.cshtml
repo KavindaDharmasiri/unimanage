@@ -1,0 +1,39 @@
+@model List<uniManage.Models.Message>
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "Messages";
+}
+
+<h2>Messages</h2>
+
+<a href="@Url.Action("SendMessage", "Admin")" class="btn btn-primary">Send New Message</a>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>From</th>
+            <th>To</th>
+            <th>Subject</th>
+            <th>Date</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var message in Model)
+        {
+            <tr style="cursor: pointer;" onclick="window.location='@Url.Action("ViewMessage", "Admin", new { id = message.MessageId })'">
+                <td>@message.Sender.FullName</td>
+                <td>@message.Receiver.FullName</td>
+                <td>@message.Subject</td>
+                <td>@message.SentDate.ToString("yyyy-MM-dd HH:mm")</td>
+                <td>@(message.IsRead ? "Read" : "Unread")</td>
+            </tr>
+        }
+    </tbody>
+</table>

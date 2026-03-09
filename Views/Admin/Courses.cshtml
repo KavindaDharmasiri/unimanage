@@ -1,0 +1,44 @@
+@model List<uniManage.Models.Course>
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "Manage Courses";
+}
+
+<h2>Manage Courses</h2>
+
+<a href="@Url.Action("CreateCourse", "Admin")" class="btn btn-primary">Create New Course</a>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Code</th>
+            <th>Name</th>
+            <th>Credits</th>
+            <th>Lecturer</th>
+            <th>Max Enrollment</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var course in Model)
+        {
+            <tr>
+                <td>@course.CourseCode</td>
+                <td>@course.CourseName</td>
+                <td>@course.Credits</td>
+                <td>@(course.Lecturer != null && course.Lecturer.User != null ? course.Lecturer.User.FullName : "Not Assigned")</td>
+                <td>@course.MaxEnrollment</td>
+                <td>
+                    <a href="@Url.Action("EditCourse", "Admin", new { id = course.CourseId })" class="btn btn-sm">Edit</a>
+                    <a href="@Url.Action("DeleteCourse", "Admin", new { id = course.CourseId })" class="btn btn-sm btn-danger">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

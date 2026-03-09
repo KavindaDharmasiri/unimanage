@@ -1,0 +1,31 @@
+@model uniManage.Models.Assignment
+@{
+    ViewBag.Title = "Submit Assignment";
+}
+
+<h2>Submit Assignment</h2>
+
+<div style="margin: 20px 0; padding: 15px; background-color: #f4f4f4; border-radius: 5px;">
+    <h3>@Model.Title</h3>
+    <p><strong>Description:</strong> @Model.Description</p>
+    <p><strong>Due Date:</strong> @Model.DueDate.ToString("yyyy-MM-dd HH:mm")</p>
+    <p><strong>Max Marks:</strong> @Model.MaxMarks</p>
+    @if (!string.IsNullOrEmpty(Model.FilePath))
+    {
+        <p><strong>Assignment File:</strong> <a href="@Model.FilePath" class="btn btn-sm btn-primary" download>Download Assignment File</a></p>
+    }
+</div>
+
+@using (Html.BeginForm("SubmitAssignment", "Student", FormMethod.Post))
+{
+    @Html.AntiForgeryToken()
+    @Html.Hidden("id", Model.AssignmentId)
+    
+    <div style="margin-bottom: 15px;">
+        <label>Your Submission:</label>
+        <textarea name="content" rows="10" required style="width: 100%; padding: 8px;"></textarea>
+    </div>
+    
+    <button type="submit" style="padding: 10px 20px; background-color: #28a745; color: white; border: none; cursor: pointer; border-radius: 3px;">Submit Assignment</button>
+    @Html.ActionLink("Cancel", "Assignments", null, new { style = "padding: 10px 20px; background-color: #6c757d; color: white; text-decoration: none; border-radius: 3px; margin-left: 10px;" })
+}

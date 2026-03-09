@@ -1,0 +1,63 @@
+@model uniManage.Models.Course
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "Create Course";
+}
+
+<h2>Create New Course</h2>
+
+@using (Html.BeginForm("CreateCourse", "Admin", FormMethod.Post))
+{
+    @Html.AntiForgeryToken()
+
+    <div class="form-group">
+        <label>Course Code</label>
+        @Html.TextBoxFor(m => m.CourseCode, new { @class = "form-control" })
+    </div>
+
+    <div class="form-group">
+        <label>Course Name</label>
+        @Html.TextBoxFor(m => m.CourseName, new { @class = "form-control" })
+    </div>
+
+    <div class="form-group">
+        <label>Description</label>
+        @Html.TextAreaFor(m => m.Description, new { @class = "form-control", rows = 4 })
+    </div>
+
+    <div class="form-group">
+        <label>Credits</label>
+        @Html.TextBoxFor(m => m.Credits, new { @class = "form-control", type = "number" })
+    </div>
+
+    <div class="form-group">
+        <label>Max Enrollment</label>
+        @Html.TextBoxFor(m => m.MaxEnrollment, new { @class = "form-control", type = "number" })
+    </div>
+
+    <div class="form-group">
+        <label>Lecturer</label>
+        <select name="LecturerId" class="form-control">
+            <option value="">Select Lecturer</option>
+            @foreach (var lecturer in ViewBag.Lecturers)
+            {
+                <option value="@lecturer.UserId">@lecturer.User.FullName - @lecturer.Department</option>
+            }
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label>Prerequisite Course</label>
+        <select name="PrerequisiteCourseId" class="form-control">
+            <option value="">None</option>
+            @foreach (var course in ViewBag.Courses)
+            {
+                <option value="@course.CourseId">@course.CourseCode - @course.CourseName</option>
+            }
+        </select>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Create</button>
+    <a href="@Url.Action("Courses", "Admin")" class="btn btn-secondary">Cancel</a>
+}

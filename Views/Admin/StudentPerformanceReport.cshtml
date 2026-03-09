@@ -1,0 +1,32 @@
+@model List<uniManage.Models.StudentReportViewModel>
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "Student Performance Report";
+}
+
+<h2>Student Performance Report</h2>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Student Number</th>
+            <th>Student Name</th>
+            <th>Average Grade</th>
+            <th>Total Submissions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.StudentNumber</td>
+                <td>@item.StudentName</td>
+                <td>@item.AverageGrade.ToString("F2")</td>
+                <td>@item.TotalSubmissions</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<a href="@Url.Action("Reports", "Admin")" class="btn btn-secondary">Back to Reports</a>

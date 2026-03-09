@@ -1,0 +1,33 @@
+@{
+    ViewBag.Title = "Login";
+}
+
+<div style="max-width: 400px; margin: 50px auto; padding: 20px; border: 1px solid #ddd; border-radius: 5px;">
+    <h2>Login</h2>
+    
+    @if (ViewBag.Error != null)
+    {
+        <div style="color: red; margin-bottom: 15px;">@ViewBag.Error</div>
+    }
+    
+    @using (Html.BeginForm("Login", "Account", FormMethod.Post))
+    {
+        @Html.AntiForgeryToken()
+        
+        <div style="margin-bottom: 15px;">
+            <label>Email:</label>
+            <input type="email" name="email" required style="width: 100%; padding: 8px;" />
+        </div>
+        
+        <div style="margin-bottom: 15px;">
+            <label>Password:</label>
+            <input type="password" name="password" required style="width: 100%; padding: 8px;" />
+        </div>
+        
+        <button type="submit" style="width: 100%; padding: 10px; background-color: #333; color: white; border: none; cursor: pointer;">Login</button>
+    }
+    
+    <p style="margin-top: 15px; text-align: center;">
+        Don't have an account? @Html.ActionLink("Register here", "Register")
+    </p>
+</div>

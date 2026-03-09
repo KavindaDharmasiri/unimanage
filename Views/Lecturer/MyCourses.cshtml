@@ -1,0 +1,32 @@
+@model List<uniManage.Models.Course>
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "My Courses";
+}
+
+<h2>My Courses</h2>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Course Code</th>
+            <th>Course Name</th>
+            <th>Credits</th>
+            <th>Enrolled Students</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var course in Model)
+        {
+            <tr>
+                <td>@course.CourseCode</td>
+                <td>@course.CourseName</td>
+                <td>@course.Credits</td>
+                <td>@course.Enrollments.Count / @course.MaxEnrollment</td>
+                <td><a href="@Url.Action("CourseDetails", "Lecturer", new { id = course.CourseId })" class="btn btn-sm">View Details</a></td>
+            </tr>
+        }
+    </tbody>
+</table>

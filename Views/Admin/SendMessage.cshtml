@@ -1,0 +1,67 @@
+@model uniManage.Models.Message
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "Send Message";
+}
+
+<h2>Send Message</h2>
+
+@using (Html.BeginForm("SendMessage", "Admin", FormMethod.Post))
+{
+    @Html.AntiForgeryToken()
+    
+    <div class="form-group">
+        <label>To:</label>
+        <div style="margin-bottom: 10px;">
+            <button type="button" class="btn btn-sm btn-secondary" onclick="selectAll()">Select All</button>
+            <button type="button" class="btn btn-sm btn-secondary" onclick="selectByRole('Administrator')">Admins Only</button>
+            <button type="button" class="btn btn-sm btn-secondary" onclick="selectByRole('Lecturer')">Lecturers Only</button>
+            <button type="button" class="btn btn-sm btn-secondary" onclick="selectByRole('Student')">Students Only</button>
+            <button type="button" class="btn btn-sm btn-secondary" onclick="clearAll()">Clear All</button>
+        </div>
+        <select name="receiverIds" id="receiverSelect" class="form-control" multiple size="10" required>
+            @foreach (var user in ViewBag.Users)
+            {
+                <option value="@user.UserId" data-role="@user.Role" @(ViewBag.ReceiverId == user.UserId ? "selected" : "")>@user.FullName (@user.Role)</option>
+            }
+        </select>
+        <small class="form-text text-muted">Hold Ctrl/Cmd to select multiple recipients</small>
+    </div>
+    
+    <div class="form-group">
+        <label>Subject:</label>
+        <input type="text" name="Subject" class="form-control" value="@ViewBag.Subject" required />
+    </div>
+    
+    <div class="form-group">
+        <label>Message:</label>
+        <textarea name="Body" class="form-control" rows="5" required></textarea>
+    </div>
+    
+    <button type="submit" class="btn btn-primary">Send</button>
+    <a href="@Url.Action("Messages", "Admin")" class="btn btn-secondary">Cancel</a>
+}
+
+<script>
+function selectAll() {
+    var select = document.getElementById('receiverSelect');
+    for (var i = 0; i < select.options.length; i++) {
+        select.options[i].selected = true;
+    }
+}
+
+function selectByRole(role) {
+    var select = document.getElementById('receiverSelect');
+    for (var i = 0; i < select.options.length; i++) {
+        select.options[i].selected = select.options[i].getAttribute('data-role') === role;
+    }
+}
+
+function clearAll() {
+    var select = document.getElementById('receiverSelect');
+    for (var i = 0; i < select.options.length; i++) {
+        select.options[i].selected = false;
+    }
+}
+</script>

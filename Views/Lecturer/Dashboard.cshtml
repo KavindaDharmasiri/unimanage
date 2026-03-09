@@ -1,0 +1,94 @@
+@model uniManage.Models.LecturerDashboardViewModel
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "Lecturer Dashboard";
+}
+
+<h2>Welcome, @Model.Lecturer.User.FullName</h2>
+<p>Department: @Model.Lecturer.Department</p>
+
+<div class="dashboard-stats">
+    <div class="stat-box">
+        <h3>@Model.Courses.Count</h3>
+        <p>My Courses</p>
+    </div>
+    <div class="stat-box">
+        <h3>@Model.PendingGrading.Count</h3>
+        <p>Pending Grading</p>
+    </div>
+    <div class="stat-box">
+        <h3>@Model.Courses.Sum(c => c.Enrollments.Count)</h3>
+        <p>Total Students</p>
+    </div>
+</div>
+
+<div class="section">
+    <h3>My Courses</h3>
+    @if (Model.Courses.Any())
+    {
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Code</th>
+                    <th>Name</th>
+                    <th>Credits</th>
+                    <th>Enrolled Students</th>
+                    <th>Assignments</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var course in Model.Courses)
+                {
+                    <tr>
+                        <td>@course.CourseCode</td>
+                        <td>@course.CourseName</td>
+                        <td>@course.Credits</td>
+                        <td>@course.Enrollments.Count / @course.MaxEnrollment</td>
+                        <td>@course.Assignments.Count</td>
+                        <td><a href="@Url.Action("CourseDetails", "Lecturer", new { id = course.CourseId })" class="btn btn-sm btn-primary">View Details</a></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <p>You are not assigned to any courses yet.</p>
+    }
+</div>
+
+<div class="section">
+    <h3>Pending Grading</h3>
+    @if (Model.PendingGrading.Any())
+    {
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Student</th>
+                    <th>Assignment</th>
+                    <th>Course</th>
+                    <th>Submission Date</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var submission in Model.PendingGrading.Take(10))
+                {
+                    <tr>
+                        <td>@submission.Student.User.FullName</td>
+                        <td>@submission.Assignment.Title</td>
+                        <td>@submission.Assignment.Course.CourseName</td>
+                        <td>@submission.SubmissionDate.ToString("yyyy-MM-dd HH:mm")</td>
+                        <td><a href="@Url.Action("GradeSubmission", "Lecturer", new { id = submission.SubmissionId })" class="btn btn-sm btn-primary">Grade</a></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <p>No pending submissions to grade.</p>
+    }
+</div>

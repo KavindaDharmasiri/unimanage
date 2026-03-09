@@ -1,0 +1,43 @@
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "Send Message";
+}
+
+<h2>Send Message</h2>
+
+@using (Html.BeginForm("SendMessage", "Student", FormMethod.Post))
+{
+    @Html.AntiForgeryToken()
+    
+    <div class="form-group">
+        <label>To</label>
+        <select name="receiverId" class="form-control" required>
+            <option value="">Select Recipient</option>
+            <optgroup label="Lecturers">
+                @foreach (var lecturer in ViewBag.Lecturers)
+                {
+                    <option value="@lecturer.UserId" @(ViewBag.ReceiverId == lecturer.UserId ? "selected" : "")>@lecturer.User.FullName - @lecturer.Department</option>
+                }
+            </optgroup>
+            <optgroup label="Administrators">
+                @foreach (var admin in ViewBag.Admins)
+                {
+                    <option value="@admin.UserId" @(ViewBag.ReceiverId == admin.UserId ? "selected" : "")>@admin.FullName (Admin)</option>
+                }
+            </optgroup>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label>Subject</label>
+        <input type="text" name="subject" class="form-control" value="@ViewBag.Subject" required />
+    </div>
+
+    <div class="form-group">
+        <label>Message</label>
+        <textarea name="body" class="form-control" rows="6" required></textarea>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Send</button>
+    <a href="@Url.Action("Messages", "Student")" class="btn btn-secondary">Cancel</a>
+}

@@ -1,0 +1,35 @@
+@model List<uniManage.Models.AssignmentSubmission>
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "View Submissions";
+}
+
+<h2>Assignment Submissions</h2>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Student</th>
+            <th>Submission Date</th>
+            <th>Grade</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var submission in Model)
+        {
+            <tr>
+                <td>@submission.Student.User.FullName</td>
+                <td>@submission.SubmissionDate.ToString("yyyy-MM-dd HH:mm")</td>
+                <td>@(submission.Grade.HasValue ? submission.Grade.ToString() : "Not Graded")</td>
+                <td><a href="@Url.Action("GradeSubmission", "Lecturer", new { id = submission.SubmissionId })" class="btn btn-sm">Grade</a></td>
+            </tr>
+        }
+    </tbody>
+</table>

@@ -1,0 +1,39 @@
+@model uniManage.Models.AssignmentSubmission
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "Grade Submission";
+}
+
+<h2>Grade Submission</h2>
+
+<div class="submission-details">
+    <p><strong>Student:</strong> @Model.Student.User.FullName</p>
+    <p><strong>Assignment:</strong> @Model.Assignment.Title</p>
+    <p><strong>Submission Date:</strong> @Model.SubmissionDate.ToString("yyyy-MM-dd HH:mm")</p>
+    <p><strong>Max Marks:</strong> @Model.Assignment.MaxMarks</p>
+    
+    <div class="submission-content">
+        <h4>Submission:</h4>
+        <p>@Model.SubmissionText</p>
+    </div>
+</div>
+
+@using (Html.BeginForm("GradeSubmission", "Lecturer", FormMethod.Post))
+{
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="id" value="@Model.SubmissionId" />
+
+    <div class="form-group">
+        <label>Grade</label>
+        <input type="number" name="grade" class="form-control" value="@Model.Grade" max="@Model.Assignment.MaxMarks" required />
+    </div>
+
+    <div class="form-group">
+        <label>Feedback</label>
+        <textarea name="feedback" class="form-control" rows="4">@Model.Feedback</textarea>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Submit Grade</button>
+    <a href="@Url.Action("ViewSubmissions", "Lecturer", new { assignmentId = Model.AssignmentId })" class="btn btn-secondary">Cancel</a>
+}

@@ -1,0 +1,69 @@
+@model uniManage.Models.RegisterViewModel
+@{
+    ViewBag.Title = "Register";
+}
+
+<div style="max-width: 400px; margin: 50px auto; padding: 20px; border: 1px solid #ddd; border-radius: 5px;">
+    <h2>Register</h2>
+    
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div style="color: green; margin-bottom: 15px; padding: 10px; background-color: #d4edda; border: 1px solid #c3e6cb; border-radius: 4px;">
+            @TempData["SuccessMessage"]
+        </div>
+    }
+    
+    @if (ViewBag.Error != null)
+    {
+        <div style="color: red; margin-bottom: 15px;">@ViewBag.Error</div>
+    }
+    
+    @using (Html.BeginForm("Register", "Account", FormMethod.Post))
+    {
+        @Html.AntiForgeryToken()
+        
+        <div style="margin-bottom: 15px;">
+            <label>Full Name:</label>
+            @Html.TextBoxFor(m => m.FullName, new { @class = "form-control", style = "width: 100%; padding: 8px;" })
+        </div>
+        
+        <div style="margin-bottom: 15px;">
+            <label>Email:</label>
+            @Html.TextBoxFor(m => m.Email, new { type = "email", @class = "form-control", style = "width: 100%; padding: 8px;" })
+        </div>
+        
+        <div style="margin-bottom: 15px;">
+            <label>Password:</label>
+            @Html.PasswordFor(m => m.Password, new { @class = "form-control", style = "width: 100%; padding: 8px;" })
+        </div>
+        
+        <div style="margin-bottom: 15px;">
+            <label>Role:</label>
+            @Html.DropDownListFor(m => m.Role, new SelectList(new[] { "Student", "Lecturer", "Administrator" }), "Select Role", new { @class = "form-control", style = "width: 100%; padding: 8px;", id = "roleSelect" })
+        </div>
+        
+        <div id="studentFields" style="display: none; margin-bottom: 15px;">
+            <label>Student Number:</label>
+            @Html.TextBoxFor(m => m.StudentNumber, new { @class = "form-control", style = "width: 100%; padding: 8px;" })
+        </div>
+        
+        <div id="lecturerFields" style="display: none; margin-bottom: 15px;">
+            <label>Department:</label>
+            @Html.TextBoxFor(m => m.Department, new { @class = "form-control", style = "width: 100%; padding: 8px;" })
+        </div>
+        
+        <button type="submit" style="width: 100%; padding: 10px; background-color: #333; color: white; border: none; cursor: pointer;">Register</button>
+    }
+    
+    <p style="margin-top: 15px; text-align: center;">
+        Already have an account? @Html.ActionLink("Login here", "Login")
+    </p>
+</div>
+
+<script>
+    document.getElementById('roleSelect').addEventListener('change', function() {
+        var role = this.value;
+        document.getElementById('studentFields').style.display = role === 'Student' ? 'block' : 'none';
+        document.getElementById('lecturerFields').style.display = role === 'Lecturer' ? 'block' : 'none';
+    });
+</script>

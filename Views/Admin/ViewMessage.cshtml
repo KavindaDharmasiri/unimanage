@@ -1,0 +1,27 @@
+@model uniManage.Models.Message
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "View Message";
+}
+
+<h2>Message Details</h2>
+
+<div class="card">
+    <div class="card-body">
+        <h4>@Model.Subject</h4>
+        <hr />
+        <p><strong>From:</strong> @Model.Sender.FullName</p>
+        <p><strong>To:</strong> @Model.Receiver.FullName</p>
+        <p><strong>Date:</strong> @Model.SentDate.ToString("yyyy-MM-dd HH:mm")</p>
+        <hr />
+        <div style="padding: 15px; background-color: #f8f9fa; border-radius: 5px;">
+            <p style="white-space: pre-wrap;">@Model.Body</p>
+        </div>
+    </div>
+</div>
+
+<div style="margin-top: 20px;">
+    <a href="@Url.Action("SendMessage", "Admin", new { receiverId = Model.SenderId, subject = "Re: " + Model.Subject })" class="btn btn-primary">Reply</a>
+    <a href="@Url.Action("Messages", "Admin")" class="btn btn-secondary">Back to Messages</a>
+</div>

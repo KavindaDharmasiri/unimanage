@@ -1,0 +1,94 @@
+@model uniManage.Models.Course
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "Course Details";
+}
+
+<h2>@Model.CourseName (@Model.CourseCode)</h2>
+
+<div class="section">
+    <h3>Course Information</h3>
+    <p><strong>Description:</strong> @Model.Description</p>
+    <p><strong>Credits:</strong> @Model.Credits</p>
+    <p><strong>Lecturer:</strong> @(Model.Lecturer != null && Model.Lecturer.User != null ? Model.Lecturer.User.FullName : "Not Assigned")</p>
+</div>
+
+<div class="section">
+    <h3>Course Materials</h3>
+    @if (Model.Materials != null && Model.Materials.Any())
+    {
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Description</th>
+                    <th>Upload Date</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var material in Model.Materials)
+                {
+                    <tr>
+                        <td>@material.Title</td>
+                        <td>@material.Description</td>
+                        <td>@material.UploadDate.ToString("yyyy-MM-dd")</td>
+                        <td><a href="@material.FilePath" class="btn btn-sm btn-primary" download>Download</a></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <p>No materials available yet.</p>
+    }
+</div>
+
+<div class="section">
+    <h3>Assignments</h3>
+    @if (Model.Assignments != null && Model.Assignments.Any())
+    {
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Description</th>
+                    <th>Due Date</th>
+                    <th>Max Marks</th>
+                    <th>Attachment</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var assignment in Model.Assignments)
+                {
+                    <tr>
+                        <td>@assignment.Title</td>
+                        <td>@assignment.Description</td>
+                        <td>@assignment.DueDate.ToString("yyyy-MM-dd HH:mm")</td>
+                        <td>@assignment.MaxMarks</td>
+                        <td>
+                            @if (!string.IsNullOrEmpty(assignment.FilePath))
+                            {
+                                <a href="@assignment.FilePath" download>Download</a>
+                            }
+                            else
+                            {
+                                <span>-</span>
+                            }
+                        </td>
+                        <td><a href="@Url.Action("SubmitAssignment", "Student", new { id = assignment.AssignmentId })" class="btn btn-sm btn-primary">Submit</a></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <p>No assignments yet.</p>
+    }
+</div>
+
+<a href="@Url.Action("Dashboard", "Student")" class="btn btn-secondary">Back to Dashboard</a>
