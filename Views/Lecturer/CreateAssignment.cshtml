@@ -1,78 +1,101 @@
 @model uniManage.Models.Assignment
-
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
     ViewBag.Title = "Create Assignment";
 }
 
-<h2>Create Assignment</h2>
+<div class="page-title">Create Assignment</div>
+<div class="page-subtitle">Create a new assignment for your course</div>
 
+<!-- Alerts -->
 @if (TempData["Success"] != null)
 {
-    <div class="alert alert-success">@TempData["Success"]</div>
+    <div class="alert alert-success">
+        <i class="fas fa-check-circle" style="margin-right: 0.5rem;"></i>
+        @TempData["Success"]
+    </div>
 }
 
-@Html.ValidationSummary(true, "", new { @class = "text-danger" })
+@Html.ValidationSummary(true, "", new { @class = "alert alert-error" })
 
-@using (Html.BeginForm("CreateAssignment", "Lecturer", FormMethod.Post, new { enctype = "multipart/form-data" }))
-{
-    @Html.AntiForgeryToken()
+<!-- Create Assignment Form -->
+<div class="table-container">
+    <div class="table-header">
+        <div class="table-title">Assignment Details</div>
+    </div>
     
-    if (ViewBag.CourseId != null)
-    {
-        <input type="hidden" name="CourseId" value="@ViewBag.CourseId" />
-    }
-    else
-    {
-        <div class="form-group">
-            <label>Course</label>
-            <select name="CourseId" class="form-control" required>
-                <option value="">Select Course</option>
-                @foreach (var course in ViewBag.Courses)
+    <div style="padding: 2rem;">
+        @using (Html.BeginForm("CreateAssignment", "Lecturer", FormMethod.Post, new { enctype = "multipart/form-data" }))
+        {
+            @Html.AntiForgeryToken()
+            
+            if (ViewBag.CourseId != null)
+            {
+                <input type="hidden" name="CourseId" value="@ViewBag.CourseId" />
+            }
+            else
+            {
+                <div class="form-group">
+                    <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: #1a202c;">Course</label>
+                    <select name="CourseId" required style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.95rem; background: white;">
+                        <option value="">Select Course</option>
+                        @foreach (var course in ViewBag.Courses)
+                        {
+                            <option value="@course.CourseId">@course.CourseCode - @course.CourseName</option>
+                        }
+                    </select>
+                </div>
+            }
+
+            <div class="form-group">
+                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: #1a202c;">Title</label>
+                <input type="text" name="Title" required style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.95rem;" placeholder="Enter assignment title..." />
+                @Html.ValidationMessageFor(m => m.Title, "", new { @class = "text-danger" })
+            </div>
+
+            <div class="form-group">
+                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: #1a202c;">Description</label>
+                <textarea name="Description" rows="4" style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.95rem; resize: vertical;" placeholder="Describe the assignment requirements..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: #1a202c;">Due Date</label>
+                <input type="datetime-local" name="DueDate" required style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.95rem;" />
+                @Html.ValidationMessageFor(m => m.DueDate, "", new { @class = "text-danger" })
+            </div>
+
+            <div class="form-group">
+                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: #1a202c;">Max Marks</label>
+                <input type="number" name="MaxMarks" required style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.95rem;" placeholder="Enter maximum marks..." />
+                @Html.ValidationMessageFor(m => m.MaxMarks, "", new { @class = "text-danger" })
+            </div>
+
+            <div class="form-group">
+                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: #1a202c;">Attachment (Optional)</label>
+                <input type="file" name="file" style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.95rem;" />
+                <p style="color: #64748b; font-size: 0.875rem; margin-top: 0.5rem;">Upload assignment files, instructions, or resources</p>
+            </div>
+
+            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                <button type="submit" style="background: #4f46e5; color: white; padding: 0.75rem 1.5rem; border: none; border-radius: 8px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fas fa-plus"></i>
+                    Create Assignment
+                </button>
+                @if (ViewBag.CourseId != null)
                 {
-                    <option value="@course.CourseId">@course.CourseCode - @course.CourseName</option>
+                    <a href="@Url.Action("CourseDetails", "Lecturer", new { id = ViewBag.CourseId })" style="background: #64748b; color: white; padding: 0.75rem 1.5rem; border-radius: 8px; text-decoration: none; font-weight: 500; display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fas fa-arrow-left"></i>
+                        Cancel
+                    </a>
                 }
-            </select>
-        </div>
-    }
-
-    <div class="form-group">
-        <label>Title</label>
-        <input type="text" name="Title" class="form-control" required />
-        @Html.ValidationMessageFor(m => m.Title, "", new { @class = "text-danger" })
-    </div>
-
-    <div class="form-group">
-        <label>Description</label>
-        <textarea name="Description" class="form-control" rows="4"></textarea>
-    </div>
-
-    <div class="form-group">
-        <label>Due Date</label>
-        <input type="datetime-local" name="DueDate" class="form-control" required />
-        @Html.ValidationMessageFor(m => m.DueDate, "", new { @class = "text-danger" })
-    </div>
-
-    <div class="form-group">
-        <label>Max Marks</label>
-        <input type="number" name="MaxMarks" class="form-control" required />
-        @Html.ValidationMessageFor(m => m.MaxMarks, "", new { @class = "text-danger" })
-    </div>
-
-    <div class="form-group">
-        <label>Attachment (Optional)</label>
-        <input type="file" name="file" class="form-control" />
-    </div>
-
-    <div class="form-group">
-        <button type="submit" class="btn btn-primary">Create</button>
-        @if (ViewBag.CourseId != null)
-        {
-            <a href="@Url.Action("CourseDetails", "Lecturer", new { id = ViewBag.CourseId })" class="btn btn-secondary">Cancel</a>
-        }
-        else
-        {
-            <a href="@Url.Action("Dashboard", "Lecturer")" class="btn btn-secondary">Cancel</a>
+                else
+                {
+                    <a href="@Url.Action("Dashboard", "Lecturer")" style="background: #64748b; color: white; padding: 0.75rem 1.5rem; border-radius: 8px; text-decoration: none; font-weight: 500; display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fas fa-arrow-left"></i>
+                        Cancel
+                    </a>
+                }
+            </div>
         }
     </div>
-}
+</div>

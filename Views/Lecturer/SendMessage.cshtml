@@ -1,31 +1,48 @@
 @model uniManage.Models.Message
-
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
     ViewBag.Title = "Send Message";
 }
 
-<h2>Send Message</h2>
+<div class="page-title">Send Message</div>
+<div class="page-subtitle">Compose a new message to students or administrators</div>
 
-@using (Html.BeginForm("SendMessage", "Lecturer", FormMethod.Post))
-{
-    @Html.AntiForgeryToken()
-    
-    <div class="form-group">
-        <label>To:</label>
-        @Html.DropDownListFor(m => m.ReceiverId, new SelectList(ViewBag.Users, "UserId", "FullName", ViewBag.ReceiverId), "Select Recipient", new { @class = "form-control" })
+<!-- Send Message Form -->
+<div class="table-container">
+    <div class="table-header">
+        <div class="table-title">Compose Message</div>
     </div>
     
-    <div class="form-group">
-        <label>Subject:</label>
-        @Html.TextBoxFor(m => m.Subject, new { @class = "form-control", Value = ViewBag.Subject })
+    <div style="padding: 2rem;">
+        @using (Html.BeginForm("SendMessage", "Lecturer", FormMethod.Post))
+        {
+            @Html.AntiForgeryToken()
+            
+            <div class="form-group">
+                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: #1a202c;">To</label>
+                @Html.DropDownListFor(m => m.ReceiverId, new SelectList(ViewBag.Users, "UserId", "FullName", ViewBag.ReceiverId), "Select Recipient", new { @class = "form-control", style = "width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.95rem; background: white;" })
+            </div>
+            
+            <div class="form-group">
+                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: #1a202c;">Subject</label>
+                @Html.TextBoxFor(m => m.Subject, new { @class = "form-control", Value = ViewBag.Subject, style = "width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.95rem;", placeholder = "Enter message subject..." })
+            </div>
+            
+            <div class="form-group">
+                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: #1a202c;">Message</label>
+                @Html.TextAreaFor(m => m.Body, new { @class = "form-control", rows = 8, style = "width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.95rem; resize: vertical; min-height: 150px;", placeholder = "Type your message here..." })
+            </div>
+            
+            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                <button type="submit" style="background: #4f46e5; color: white; padding: 0.75rem 1.5rem; border: none; border-radius: 8px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fas fa-paper-plane"></i>
+                    Send Message
+                </button>
+                <a href="@Url.Action("Messages", "Lecturer")" style="background: #64748b; color: white; padding: 0.75rem 1.5rem; border-radius: 8px; text-decoration: none; font-weight: 500; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fas fa-arrow-left"></i>
+                    Cancel
+                </a>
+            </div>
+        }
     </div>
-    
-    <div class="form-group">
-        <label>Message:</label>
-        @Html.TextAreaFor(m => m.Body, new { @class = "form-control", rows = 5 })
-    </div>
-    
-    <button type="submit" class="btn btn-primary">Send</button>
-    <a href="@Url.Action("Messages", "Lecturer")" class="btn btn-secondary">Cancel</a>
-}
+</div>

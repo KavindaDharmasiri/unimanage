@@ -1,53 +1,91 @@
 @model uniManage.Models.LecturerDashboardViewModel
-
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
     ViewBag.Title = "Lecturer Dashboard";
 }
 
-<h2>Welcome, @Model.Lecturer.User.FullName</h2>
-<p>Department: @Model.Lecturer.Department</p>
+<div class="page-title">Welcome, @Model.Lecturer.User.FullName</div>
+<div class="page-subtitle">Department: @Model.Lecturer.Department</div>
 
-<div class="dashboard-stats">
-    <div class="stat-box">
-        <h3>@Model.Courses.Count</h3>
-        <p>My Courses</p>
+<!-- Stats Grid -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon blue">
+            <i class="fas fa-book"></i>
+        </div>
+        <div class="stat-value">@Model.Courses.Count</div>
+        <div class="stat-label">My Courses</div>
+        <div class="stat-change neutral">Active courses</div>
     </div>
-    <div class="stat-box">
-        <h3>@Model.PendingGrading.Count</h3>
-        <p>Pending Grading</p>
+    
+    <div class="stat-card">
+        <div class="stat-icon orange">
+            <i class="fas fa-clipboard-check"></i>
+        </div>
+        <div class="stat-value">@Model.PendingGrading.Count</div>
+        <div class="stat-label">Pending Grading</div>
+        <div class="stat-change neutral">Awaiting review</div>
     </div>
-    <div class="stat-box">
-        <h3>@Model.Courses.Sum(c => c.Enrollments.Count)</h3>
-        <p>Total Students</p>
+    
+    <div class="stat-card">
+        <div class="stat-icon green">
+            <i class="fas fa-users"></i>
+        </div>
+        <div class="stat-value">@Model.Courses.Sum(c => c.Enrollments.Count)</div>
+        <div class="stat-label">Total Students</div>
+        <div class="stat-change neutral">Enrolled students</div>
     </div>
 </div>
 
-<div class="section">
-    <h3>My Courses</h3>
+<!-- My Courses Section -->
+<div class="table-container">
+    <div class="table-header">
+        <div class="table-title">My Courses</div>
+        <a href="@Url.Action("MyCourses", "Lecturer")" class="view-all">View All</a>
+    </div>
+    
     @if (Model.Courses.Any())
     {
         <table class="table">
             <thead>
                 <tr>
-                    <th>Code</th>
-                    <th>Name</th>
+                    <th>Course Details</th>
                     <th>Credits</th>
                     <th>Enrolled Students</th>
                     <th>Assignments</th>
-                    <th>Action</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach (var course in Model.Courses)
                 {
                     <tr>
-                        <td>@course.CourseCode</td>
-                        <td>@course.CourseName</td>
-                        <td>@course.Credits</td>
-                        <td>@course.Enrollments.Count / @course.MaxEnrollment</td>
-                        <td>@course.Assignments.Count</td>
-                        <td><a href="@Url.Action("CourseDetails", "Lecturer", new { id = course.CourseId })" class="btn btn-sm btn-primary">View Details</a></td>
+                        <td>
+                            <div class="user-info">
+                                <div class="user-avatar-table" style="background: #4f46e5;">
+                                    @course.CourseCode.Substring(0, Math.Min(3, course.CourseCode.Length))
+                                </div>
+                                <div class="user-details">
+                                    <h4>@course.CourseName</h4>
+                                    <p>@course.CourseCode</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="status-badge active">@course.Credits Credits</span>
+                        </td>
+                        <td>
+                            <div class="user-details">
+                                <h4>@course.Enrollments.Count / @course.MaxEnrollment</h4>
+                                <p>Students enrolled</p>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="status-badge pending">@course.Assignments.Count Assignments</span>
+                        </td>
+                        <td>
+                            <a href="@Url.Action("CourseDetails", "Lecturer", new { id = course.CourseId })" class="btn-manage">View Details</a>
+                        </td>
                     </tr>
                 }
             </tbody>
@@ -55,12 +93,21 @@
     }
     else
     {
-        <p>You are not assigned to any courses yet.</p>
+        <div style="text-align: center; padding: 3rem; color: #64748b;">
+            <i class="fas fa-chalkboard-teacher" style="font-size: 3rem; margin-bottom: 1rem; color: #cbd5e1;"></i>
+            <h3 style="margin-bottom: 0.5rem; color: #374151;">No Courses Assigned</h3>
+            <p>You are not assigned to any courses yet. Contact administration for course assignments.</p>
+        </div>
     }
 </div>
 
-<div class="section">
-    <h3>Pending Grading</h3>
+<!-- Pending Grading Section -->
+<div class="table-container">
+    <div class="table-header">
+        <div class="table-title">Pending Grading</div>
+        <span class="status-badge pending">@Model.PendingGrading.Count submissions</span>
+    </div>
+    
     @if (Model.PendingGrading.Any())
     {
         <table class="table">
@@ -70,18 +117,45 @@
                     <th>Assignment</th>
                     <th>Course</th>
                     <th>Submission Date</th>
-                    <th>Action</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach (var submission in Model.PendingGrading.Take(10))
                 {
                     <tr>
-                        <td>@submission.Student.User.FullName</td>
-                        <td>@submission.Assignment.Title</td>
-                        <td>@submission.Assignment.Course.CourseName</td>
-                        <td>@submission.SubmissionDate.ToString("yyyy-MM-dd HH:mm")</td>
-                        <td><a href="@Url.Action("GradeSubmission", "Lecturer", new { id = submission.SubmissionId })" class="btn btn-sm btn-primary">Grade</a></td>
+                        <td>
+                            <div class="user-info">
+                                <div class="user-avatar-table" style="background: #10b981;">
+                                    @submission.Student.User.FullName.Substring(0, 1).ToUpper()
+                                </div>
+                                <div class="user-details">
+                                    <h4>@submission.Student.User.FullName</h4>
+                                    <p>@submission.Student.StudentNumber</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="user-details">
+                                <h4>@submission.Assignment.Title</h4>
+                                <p>Assignment</p>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="user-details">
+                                <h4>@submission.Assignment.Course.CourseName</h4>
+                                <p>@submission.Assignment.Course.CourseCode</p>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="user-details">
+                                <h4>@submission.SubmissionDate.ToString("MMM dd, yyyy")</h4>
+                                <p>@submission.SubmissionDate.ToString("HH:mm")</p>
+                            </div>
+                        </td>
+                        <td>
+                            <a href="@Url.Action("GradeSubmission", "Lecturer", new { id = submission.SubmissionId })" class="btn-manage" style="color: #f59e0b;">Grade</a>
+                        </td>
                     </tr>
                 }
             </tbody>
@@ -89,6 +163,10 @@
     }
     else
     {
-        <p>No pending submissions to grade.</p>
+        <div style="text-align: center; padding: 3rem; color: #64748b;">
+            <i class="fas fa-clipboard-check" style="font-size: 3rem; margin-bottom: 1rem; color: #cbd5e1;"></i>
+            <h3 style="margin-bottom: 0.5rem; color: #374151;">No Pending Grading</h3>
+            <p>Great! All submissions have been graded.</p>
+        </div>
     }
 </div>

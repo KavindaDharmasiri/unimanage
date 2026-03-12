@@ -1,32 +1,79 @@
 @model List<uniManage.Models.Course>
-
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
     ViewBag.Title = "My Courses";
 }
 
-<h2>My Courses</h2>
+<div class="page-title">My Courses</div>
+<div class="page-subtitle">Manage your assigned courses and students</div>
 
-<table class="table">
-    <thead>
-        <tr>
-            <th>Course Code</th>
-            <th>Course Name</th>
-            <th>Credits</th>
-            <th>Enrolled Students</th>
-            <th>Action</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var course in Model)
-        {
-            <tr>
-                <td>@course.CourseCode</td>
-                <td>@course.CourseName</td>
-                <td>@course.Credits</td>
-                <td>@course.Enrollments.Count / @course.MaxEnrollment</td>
-                <td><a href="@Url.Action("CourseDetails", "Lecturer", new { id = course.CourseId })" class="btn btn-sm">View Details</a></td>
-            </tr>
-        }
-    </tbody>
-</table>
+<!-- Courses Table -->
+<div class="table-container">
+    <div class="table-header">
+        <div class="table-title">All Courses</div>
+        <span class="status-badge active">@Model.Count courses</span>
+    </div>
+    
+    @if (Model.Any())
+    {
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Course Details</th>
+                    <th>Credits</th>
+                    <th>Enrolled Students</th>
+                    <th>Capacity</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var course in Model)
+                {
+                    var enrollmentPercentage = course.MaxEnrollment > 0 ? (course.Enrollments.Count * 100 / course.MaxEnrollment) : 0;
+                    
+                    <tr>
+                        <td>
+                            <div class="user-info">
+                                <div class="user-avatar-table" style="background: #4f46e5;">
+                                    @course.CourseCode.Substring(0, Math.Min(3, course.CourseCode.Length))
+                                </div>
+                                <div class="user-details">
+                                    <h4>@course.CourseName</h4>
+                                    <p>@course.CourseCode</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="status-badge active">@course.Credits Credits</span>
+                        </td>
+                        <td>
+                            <div class="user-details">
+                                <h4>@course.Enrollments.Count Students</h4>
+                                <p>Currently enrolled</p>
+                            </div>
+                        </td>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <div style="flex: 1; background: #f1f5f9; border-radius: 4px; height: 6px; overflow: hidden;">
+                                    <div style="height: 100%; background: @(enrollmentPercentage >= 90 ? "#ef4444" : enrollmentPercentage >= 70 ? "#f59e0b" : "#10b981"); width: @(enrollmentPercentage)%;"></div>
+                                </div>
+                                <span style="font-size: 0.875rem; color: #64748b;">@course.Enrollments.Count/@course.MaxEnrollment</span>
+                            </div>
+                        </td>
+                        <td>
+                            <a href="@Url.Action("CourseDetails", "Lecturer", new { id = course.CourseId })" class="btn-manage">View Details</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <div style="text-align: center; padding: 4rem; color: #64748b;">
+            <i class="fas fa-chalkboard-teacher" style="font-size: 4rem; margin-bottom: 1rem; color: #cbd5e1;"></i>
+            <h3 style="color: #374151; margin-bottom: 0.5rem;">No Courses Assigned</h3>
+            <p>You are not assigned to any courses yet. Contact administration for course assignments.</p>
+        </div>
+    }
+</div>

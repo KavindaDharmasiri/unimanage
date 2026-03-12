@@ -1,27 +1,64 @@
 @model uniManage.Models.Message
-
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
     ViewBag.Title = "View Message";
 }
 
-<h2>Message Details</h2>
+<div class="page-title">Message Details</div>
+<div class="page-subtitle">View and respond to messages</div>
 
-<div class="card">
-    <div class="card-body">
-        <h4>@Model.Subject</h4>
-        <hr />
-        <p><strong>From:</strong> @Model.Sender.FullName</p>
-        <p><strong>To:</strong> @Model.Receiver.FullName</p>
-        <p><strong>Date:</strong> @Model.SentDate.ToString("yyyy-MM-dd HH:mm")</p>
-        <hr />
-        <div style="padding: 15px; background-color: #f8f9fa; border-radius: 5px;">
-            <p style="white-space: pre-wrap;">@Model.Body</p>
+<!-- Message Details -->
+<div class="table-container">
+    <div class="table-header">
+        <div class="table-title">@Model.Subject</div>
+        <span class="status-badge @(Model.IsRead ? "active" : "pending")">
+            @(Model.IsRead ? "Read" : "Unread")
+        </span>
+    </div>
+    
+    <div style="padding: 2rem;">
+        <!-- Message Header -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; padding: 1.5rem; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+            <div>
+                <div style="color: #64748b; font-size: 0.875rem; margin-bottom: 0.25rem;">From</div>
+                <div style="font-weight: 500; display: flex; align-items: center; gap: 0.5rem;">
+                    <div class="user-avatar" style="background: #4f46e5; color: white; width: 32px; height: 32px;">
+                        @Model.Sender.FullName.Substring(0, 1).ToUpper()
+                    </div>
+                    @Model.Sender.FullName
+                </div>
+            </div>
+            <div>
+                <div style="color: #64748b; font-size: 0.875rem; margin-bottom: 0.25rem;">To</div>
+                <div style="font-weight: 500; display: flex; align-items: center; gap: 0.5rem;">
+                    <div class="user-avatar" style="background: #10b981; color: white; width: 32px; height: 32px;">
+                        @Model.Receiver.FullName.Substring(0, 1).ToUpper()
+                    </div>
+                    @Model.Receiver.FullName
+                </div>
+            </div>
+            <div>
+                <div style="color: #64748b; font-size: 0.875rem; margin-bottom: 0.25rem;">Date</div>
+                <div style="font-weight: 500;">@Model.SentDate.ToString("MMM dd, yyyy HH:mm")</div>
+            </div>
+        </div>
+        
+        <!-- Message Body -->
+        <div style="padding: 2rem; background: white; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 2rem;">
+            <div style="color: #64748b; font-size: 0.875rem; margin-bottom: 1rem;">Message Content</div>
+            <div style="white-space: pre-wrap; line-height: 1.6; color: #1a202c;">@Model.Body</div>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div style="display: flex; gap: 1rem;">
+            <a href="@Url.Action("SendMessage", "Lecturer", new { receiverId = Model.SenderId, subject = "Re: " + Model.Subject })" style="background: #4f46e5; color: white; padding: 0.75rem 1.5rem; border-radius: 8px; text-decoration: none; font-weight: 500; display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fas fa-reply"></i>
+                Reply
+            </a>
+            <a href="@Url.Action("Messages", "Lecturer")" style="background: #64748b; color: white; padding: 0.75rem 1.5rem; border-radius: 8px; text-decoration: none; font-weight: 500; display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fas fa-arrow-left"></i>
+                Back to Messages
+            </a>
         </div>
     </div>
-</div>
-
-<div style="margin-top: 20px;">
-    <a href="@Url.Action("SendMessage", "Lecturer", new { receiverId = Model.SenderId, subject = "Re: " + Model.Subject })" class="btn btn-primary">Reply</a>
-    <a href="@Url.Action("Messages", "Lecturer")" class="btn btn-secondary">Back to Messages</a>
 </div>

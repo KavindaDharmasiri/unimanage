@@ -640,7 +640,7 @@
                                 </a>
                             </li>
                         }
-                        <li class="nav-item"><a class="nav-link text-danger" href="@Url.Action("Logout", "Account")"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                        <li class="nav-item"><a class="nav-link text-danger" href="#" onclick="confirmLogout(event)"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
                     </ul>
                 </div>
             }
@@ -685,6 +685,36 @@
                 confirmButtonColor: '#4f46e5'
             });
             </text>
+        }
+        
+        function confirmLogout(event) {
+            event.preventDefault();
+            Swal.fire({
+                title: 'Logout Confirmation',
+                text: 'Are you sure you want to logout?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Yes, logout',
+                cancelButtonText: 'Cancel',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'Logging out...',
+                        text: 'Please wait',
+                        icon: 'info',
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                        showConfirmButton: false,
+                        timer: 1500,
+                        timerProgressBar: true
+                    }).then(() => {
+                        window.location.href = '@Url.Action("Logout", "Account")';
+                    });
+                }
+            });
         }
     </script>
 </body>
