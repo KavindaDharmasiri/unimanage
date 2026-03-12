@@ -45,7 +45,22 @@ namespace uniManage.Controllers
 
         public ActionResult Register()
         {
-            return View();
+            var model = new RegisterViewModel();
+            
+            // Auto-generate student number from Student table
+            var lastStudent = db.Students.OrderByDescending(s => s.StudentNumber).FirstOrDefault();
+            
+            if (lastStudent != null && !string.IsNullOrEmpty(lastStudent.StudentNumber))
+            {
+                var lastNumber = int.Parse(lastStudent.StudentNumber.Replace("E-", ""));
+                model.StudentNumber = $"E-{(lastNumber + 1):D4}";
+            }
+            else
+            {
+                model.StudentNumber = "E-0000";
+            }
+            
+            return View(model);
         }
 
         [HttpPost]
@@ -72,7 +87,7 @@ namespace uniManage.Controllers
                 db.Users.Add(user);
                 db.SaveChanges();
 
-                if (model.Role == "Student" && !string.IsNullOrEmpty(model.StudentNumber))
+                if (model.Role == "Student")
                 {
                     db.Students.Add(new Student { UserId = user.UserId, StudentNumber = model.StudentNumber });
                     db.SaveChanges();

@@ -1,0 +1,36 @@
+@model List<uniManage.Models.Student>
+@{
+    ViewBag.Title = "Students";
+}
+
+<h2>All Students</h2>
+
+<table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+    <thead>
+        <tr style="background-color: #333; color: white;">
+            <th style="padding: 10px; text-align: left;">Student Number</th>
+            <th style="padding: 10px; text-align: left;">Full Name</th>
+            <th style="padding: 10px; text-align: left;">Email</th>
+            <th style="padding: 10px; text-align: left;">Registration Date</th>
+            <th style="padding: 10px; text-align: left;">Status</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var student in Model)
+        {
+            <tr style="border-bottom: 1px solid #ddd;">
+                <td style="padding: 10px;">@student.StudentNumber</td>
+                <td style="padding: 10px;">@student.User.FullName</td>
+                <td style="padding: 10px;">@student.User.Email</td>
+                <td style="padding: 10px;">@student.User.CreatedDate.ToString("yyyy-MM-dd")</td>
+                <td style="padding: 10px;">
+                    <span style="padding: 3px 8px; background-color: #28a745; color: white; border-radius: 3px; font-size: 12px;">Active</span>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<div style="margin-top: 20px;">
+    @Html.ActionLink("Back to Dashboard", "Dashboard", null, new { style = "padding: 10px 20px; background-color: #333; color: white; text-decoration: none; border-radius: 3px;" })
+</div>

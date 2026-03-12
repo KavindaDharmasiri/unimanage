@@ -1,0 +1,39 @@
+@{
+    ViewBag.Title = "Admin Dashboard";
+}
+
+<h2>Administrator Dashboard</h2>
+
+<div style="display: flex; gap: 20px; margin: 30px 0; flex-wrap: wrap;">
+    <div style="flex: 1; min-width: 200px; padding: 20px; background-color: #f4f4f4; border-radius: 5px;">
+        <h3>Total Courses</h3>
+        <p style="font-size: 36px; font-weight: bold;">@ViewBag.TotalCourses</p>
+    </div>
+    
+    <div style="flex: 1; min-width: 200px; padding: 20px; background-color: #f4f4f4; border-radius: 5px;">
+        <h3>Total Students</h3>
+        <p style="font-size: 36px; font-weight: bold;">@ViewBag.TotalStudents</p>
+    </div>
+    
+    <div style="flex: 1; min-width: 200px; padding: 20px; background-color: #f4f4f4; border-radius: 5px;">
+        <h3>Total Lecturers</h3>
+        <p style="font-size: 36px; font-weight: bold;">@ViewBag.TotalLecturers</p>
+    </div>
+    
+    <div style="flex: 1; min-width: 200px; padding: 20px; background-color: #f4f4f4; border-radius: 5px;">
+        <h3>Total Enrollments</h3>
+        <p style="font-size: 36px; font-weight: bold;">@ViewBag.TotalEnrollments</p>
+    </div>
+</div>
+
+<div style="margin-top: 30px;">
+    <h3>Quick Actions</h3>
+    <div style="display: flex; gap: 15px; margin-top: 15px; flex-wrap: wrap;">
+        @Html.ActionLink("Manage Courses", "Courses", null, new { style = "padding: 10px 20px; background-color: #333; color: white; text-decoration: none; border-radius: 3px;" })
+        @Html.ActionLink("Create Course", "CreateCourse", null, new { style = "padding: 10px 20px; background-color: #28a745; color: white; text-decoration: none; border-radius: 3px;" })
+        @Html.ActionLink("View Students", "Students", null, new { style = "padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 3px;" })
+        @Html.ActionLink("View Lecturers", "Lecturers", null, new { style = "padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 3px;" })
+        @Html.ActionLink("Reports", "Reports", null, new { style = "padding: 10px 20px; background-color: #333; color: white; text-decoration: none; border-radius: 3px;" })
+        @Html.ActionLink("Logout", "Logout", "Account", null, new { style = "padding: 10px 20px; background-color: #d9534f; color: white; text-decoration: none; border-radius: 3px;" })
+    </div>
+</div>

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Web.Mvc;
 using uniManage.Models;
@@ -201,6 +202,33 @@ namespace uniManage.Controllers
                 .ToList();
 
             return View(report);
+        }
+
+        public ActionResult Students()
+        {
+            if (Session["UserId"] == null || Session["UserRole"].ToString() != "Administrator")
+                return RedirectToAction("Login", "Account");
+            
+            var students = db.Students.Include("User").ToList();
+            return View(students);
+        }
+
+        public ActionResult Lecturers()
+        {
+            if (Session["UserId"] == null || Session["UserRole"].ToString() != "Administrator")
+                return RedirectToAction("Login", "Account");
+            
+            var lecturers = db.Lecturers.Include("User").ToList();
+            
+            // Get course counts for each lecturer
+            var courseCounts = new Dictionary<int, int>();
+            foreach (var lecturer in lecturers)
+            {
+                courseCounts[lecturer.UserId] = db.Courses.Count(c => c.LecturerId == lecturer.UserId);
+            }
+            ViewBag.CourseCounts = courseCounts;
+            
+            return View(lecturers);
         }
 
         public ActionResult Messages()

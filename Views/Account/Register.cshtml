@@ -194,10 +194,10 @@
                 
                 <div id="studentFields" style="display: none;">
                     <div class="form-group">
-                        <label>Student Number</label>
+                        <label>Student Number (Auto-Generated)</label>
                         <div class="input-group">
                             <i class="fas fa-id-card"></i>
-                            @Html.TextBoxFor(m => m.StudentNumber, new { @class = "form-control", placeholder = "Enter student number" })
+                            @Html.TextBoxFor(m => m.StudentNumber, new { @class = "form-control", placeholder = "Auto-generated", @readonly = "readonly", style = "background-color: #f1f5f9; cursor: not-allowed;" })
                         </div>
                     </div>
                 </div>
