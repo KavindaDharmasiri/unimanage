@@ -20,6 +20,7 @@ namespace uniManage.Models
         public DbSet<AssignmentSubmission> AssignmentSubmissions { get; set; }
         public DbSet<CourseMaterial> CourseMaterials { get; set; }
         public DbSet<Message> Messages { get; set; }
+        public DbSet<Department> Departments { get; set; }
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {

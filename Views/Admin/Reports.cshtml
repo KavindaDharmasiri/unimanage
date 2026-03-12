@@ -1,26 +1,135 @@
 @{
-    Layout = "~/Views/Shared/_Layout.cshtml";
-    ViewBag.Title = "Reports";
+    ViewBag.Title = "Reports & Analytics";
+    ViewBag.CurrentPage = "Reports";
+    Layout = "~/Views/Admin/_AdminLayout.cshtml";
 }
 
-<h2>Reports and Analytics</h2>
+<h1 class="page-title">Reports & Analytics</h1>
+<p class="page-subtitle">Generate comprehensive reports and analyze university data trends</p>
 
-<div class="reports-menu">
-    <div class="report-card">
-        <h3>Course Popularity Report</h3>
-        <p>View enrollment statistics for all courses</p>
-        <a href="@Url.Action("CoursePopularityReport", "Admin")" class="btn btn-primary">View Report</a>
+<!-- Stats Cards -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon blue">
+            <i class="fas fa-chart-bar"></i>
+        </div>
+        <div class="stat-value">3</div>
+        <div class="stat-label">AVAILABLE REPORTS</div>
     </div>
-
-    <div class="report-card">
-        <h3>Student Performance Report</h3>
-        <p>View average grades and submission statistics</p>
-        <a href="@Url.Action("StudentPerformanceReport", "Admin")" class="btn btn-primary">View Report</a>
+    <div class="stat-card">
+        <div class="stat-icon green">
+            <i class="fas fa-download"></i>
+        </div>
+        <div class="stat-value">PDF/CSV</div>
+        <div class="stat-label">EXPORT FORMATS</div>
     </div>
-
-    <div class="report-card">
-        <h3>Lecturer Workload Report</h3>
-        <p>View course and student distribution per lecturer</p>
-        <a href="@Url.Action("LecturerWorkloadReport", "Admin")" class="btn btn-primary">View Report</a>
+    <div class="stat-card">
+        <div class="stat-icon orange">
+            <i class="fas fa-clock"></i>
+        </div>
+        <div class="stat-value">Real-time</div>
+        <div class="stat-label">DATA UPDATES</div>
     </div>
 </div>
+
+<!-- Reports Grid -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 2rem; margin-top: 2rem;">
+    
+    <!-- Course Popularity Report -->
+    <div style="background: white; border-radius: 12px; padding: 2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-left: 4px solid #4f46e5;">
+        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
+            <div style="width: 50px; height: 50px; background: #4f46e5; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white;">
+                <i class="fas fa-chart-line" style="font-size: 1.25rem;"></i>
+            </div>
+            <div>
+                <h3 style="font-size: 1.25rem; font-weight: 700; margin: 0; color: #1a202c;">Course Popularity Report</h3>
+                <p style="color: #64748b; margin: 0; font-size: 0.875rem;">Enrollment Statistics</p>
+            </div>
+        </div>
+        <p style="color: #64748b; margin-bottom: 1.5rem; line-height: 1.5;">View comprehensive enrollment statistics for all courses, including student counts, popularity trends, and course performance metrics.</p>
+        <div style="display: flex; gap: 1rem;">
+            <a href="@Url.Action("CoursePopularityReport", "Admin")" style="background: #4f46e5; color: white; padding: 0.75rem 1.5rem; border-radius: 8px; text-decoration: none; font-weight: 500; display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fas fa-eye"></i>
+                View Report
+            </a>
+            <a href="@Url.Action("ExportCourseExcel", "Admin")" style="background: #10b981; color: white; padding: 0.75rem 1.5rem; border-radius: 8px; text-decoration: none; font-weight: 500; display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fas fa-download"></i>
+                Export CSV
+            </a>
+        </div>
+    </div>
+
+    <!-- Student Performance Report -->
+    <div style="background: white; border-radius: 12px; padding: 2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-left: 4px solid #10b981;">
+        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
+            <div style="width: 50px; height: 50px; background: #10b981; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white;">
+                <i class="fas fa-user-graduate" style="font-size: 1.25rem;"></i>
+            </div>
+            <div>
+                <h3 style="font-size: 1.25rem; font-weight: 700; margin: 0; color: #1a202c;">Student Performance Report</h3>
+                <p style="color: #64748b; margin: 0; font-size: 0.875rem;">Academic Analytics</p>
+            </div>
+        </div>
+        <p style="color: #64748b; margin-bottom: 1.5rem; line-height: 1.5;">Analyze student academic performance with average grades, submission statistics, and individual progress tracking across all courses.</p>
+        <div style="display: flex; gap: 1rem;">
+            <a href="@Url.Action("StudentPerformanceReport", "Admin")" style="background: #10b981; color: white; padding: 0.75rem 1.5rem; border-radius: 8px; text-decoration: none; font-weight: 500; display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fas fa-eye"></i>
+                View Report
+            </a>
+        </div>
+    </div>
+
+    <!-- Lecturer Workload Report -->
+    <div style="background: white; border-radius: 12px; padding: 2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-left: 4px solid #f59e0b;">
+        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
+            <div style="width: 50px; height: 50px; background: #f59e0b; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white;">
+                <i class="fas fa-chalkboard-teacher" style="font-size: 1.25rem;"></i>
+            </div>
+            <div>
+                <h3 style="font-size: 1.25rem; font-weight: 700; margin: 0; color: #1a202c;">Lecturer Workload Report</h3>
+                <p style="color: #64748b; margin: 0; font-size: 0.875rem;">Faculty Analytics</p>
+            </div>
+        </div>
+        <p style="color: #64748b; margin-bottom: 1.5rem; line-height: 1.5;">Monitor lecturer workload distribution including course assignments, student counts per lecturer, and departmental teaching loads.</p>
+        <div style="display: flex; gap: 1rem;">
+            <a href="@Url.Action("LecturerWorkloadReport", "Admin")" style="background: #f59e0b; color: white; padding: 0.75rem 1.5rem; border-radius: 8px; text-decoration: none; font-weight: 500; display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fas fa-eye"></i>
+                View Report
+            </a>
+        </div>
+    </div>
+
+</div>
+
+<!-- Quick Actions -->
+<div style="background: white; border-radius: 12px; padding: 2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-top: 2rem;">
+    <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem; color: #1a202c;">Quick Actions</h2>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+        <button onclick="generateAllReports()" style="background: #6366f1; color: white; border: none; padding: 1rem; border-radius: 8px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+            <i class="fas fa-file-alt"></i>
+            Generate All Reports
+        </button>
+        <button onclick="scheduleReport()" style="background: #8b5cf6; color: white; border: none; padding: 1rem; border-radius: 8px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+            <i class="fas fa-calendar-alt"></i>
+            Schedule Reports
+        </button>
+        <button onclick="exportData()" style="background: #06b6d4; color: white; border: none; padding: 1rem; border-radius: 8px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+            <i class="fas fa-database"></i>
+            Export All Data
+        </button>
+    </div>
+</div>
+
+<script>
+function generateAllReports() {
+    alert('Feature coming soon: Generate all reports in batch');
+}
+
+function scheduleReport() {
+    alert('Feature coming soon: Schedule automatic report generation');
+}
+
+function exportData() {
+    alert('Feature coming soon: Export all university data');
+}
+</script>

@@ -1,0 +1,228 @@
+@model uniManage.Models.UserDetailViewModel
+@{
+    ViewBag.Title = "User Details";
+    ViewBag.CurrentPage = "Users";
+    Layout = "~/Views/Admin/_AdminLayout.cshtml";
+}
+
+<div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem;">
+    <a href="@Url.Action("Users", "Admin")" style="color: #64748b; text-decoration: none; display: flex; align-items: center; gap: 0.5rem;">
+        <i class="fas fa-arrow-left"></i>
+        Back to Users
+    </a>
+</div>
+
+<div style="background: white; border-radius: 12px; padding: 2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 2rem;">
+    <div style="display: flex; align-items: center; gap: 1.5rem; margin-bottom: 2rem;">
+        <div style="width: 80px; height: 80px; border-radius: 50%; background: #4f46e5; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.5rem; font-weight: 600;">
+            @{
+                var names = Model.User.FullName.Split(' ');
+                var initials = names.Length >= 2 ? 
+                    names[0][0].ToString() + names[names.Length - 1][0].ToString() : 
+                    Model.User.FullName.Length >= 2 ? Model.User.FullName.Substring(0, 2).ToUpper() : Model.User.FullName.ToUpper();
+            }
+            @initials
+        </div>
+        <div>
+            <h1 style="font-size: 2rem; font-weight: 700; margin: 0; color: #1a202c;">@Model.User.FullName</h1>
+            <p style="color: #64748b; margin: 0.5rem 0 0 0; font-size: 1.1rem;">@Model.User.Email</p>
+            <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                @if (Model.User.Role == "Student")
+                {
+                    <span style="background: #dbeafe; color: #1e40af; padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.875rem; font-weight: 500;">Student</span>
+                }
+                else if (Model.User.Role == "Lecturer")
+                {
+                    <span style="background: #fef3c7; color: #92400e; padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.875rem; font-weight: 500;">Lecturer</span>
+                }
+                else if (Model.User.Role == "Administrator")
+                {
+                    <span style="background: #fecaca; color: #991b1b; padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.875rem; font-weight: 500;">Administrator</span>
+                }
+                <span style="background: #d1fae5; color: #065f46; padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.875rem; font-weight: 500;">Active</span>
+            </div>
+        </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+        <div style="text-align: center;">
+            <div style="font-size: 0.875rem; color: #64748b; margin-bottom: 0.5rem;">Department</div>
+            <div style="font-size: 1.25rem; font-weight: 600; color: #1a202c;">@Model.Department</div>
+        </div>
+        <div style="text-align: center;">
+            <div style="font-size: 0.875rem; color: #64748b; margin-bottom: 0.5rem;">Member Since</div>
+            <div style="font-size: 1.25rem; font-weight: 600; color: #1a202c;">@Model.User.CreatedDate.ToString("MMM yyyy")</div>
+        </div>
+        @if (Model.User.Role == "Student")
+        {
+            <div style="text-align: center;">
+                <div style="font-size: 0.875rem; color: #64748b; margin-bottom: 0.5rem;">Enrolled Courses</div>
+                <div style="font-size: 1.25rem; font-weight: 600; color: #1a202c;">@Model.Courses.Count</div>
+            </div>
+            <div style="text-align: center;">
+                <div style="font-size: 0.875rem; color: #64748b; margin-bottom: 0.5rem;">Completed Assignments</div>
+                <div style="font-size: 1.25rem; font-weight: 600; color: #1a202c;">@Model.CompletedAssignments.Count</div>
+            </div>
+        }
+        else if (Model.User.Role == "Lecturer")
+        {
+            <div style="text-align: center;">
+                <div style="font-size: 0.875rem; color: #64748b; margin-bottom: 0.5rem;">Assigned Courses</div>
+                <div style="font-size: 1.25rem; font-weight: 600; color: #1a202c;">@Model.Courses.Count</div>
+            </div>
+            <div style="text-align: center;">
+                <div style="font-size: 0.875rem; color: #64748b; margin-bottom: 0.5rem;">Total Students</div>
+                <div style="font-size: 1.25rem; font-weight: 600; color: #1a202c;">@Model.StudentCount</div>
+            </div>
+        }
+    </div>
+</div>
+
+@if (Model.User.Role == "Student")
+{
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+        <!-- Enrolled Courses -->
+        <div style="background: white; border-radius: 12px; padding: 2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+            <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem; color: #1a202c;">Enrolled Courses</h2>
+            @if (Model.Courses.Any())
+            {
+                <div style="space-y: 1rem;">
+                    @foreach (var course in Model.Courses)
+                    {
+                        <div style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
+                            <h3 style="font-weight: 600; color: #1a202c; margin-bottom: 0.5rem;">@course.CourseName</h3>
+                            <p style="color: #64748b; font-size: 0.875rem; margin-bottom: 0.5rem;">@course.CourseCode</p>
+                            @if (course.Lecturer != null && course.Lecturer.User != null)
+                            {
+                                <p style="color: #64748b; font-size: 0.875rem;">Lecturer: @course.Lecturer.User.FullName</p>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <p style="color: #64748b; text-align: center; padding: 2rem;">No enrolled courses</p>
+            }
+        </div>
+
+        <!-- Assignment Status -->
+        <div style="background: white; border-radius: 12px; padding: 2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+            <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem; color: #1a202c;">Assignment Status</h2>
+            
+            <div style="margin-bottom: 2rem;">
+                <h3 style="font-weight: 600; color: #10b981; margin-bottom: 1rem;">Completed (@Model.CompletedAssignments.Count)</h3>
+                @if (Model.CompletedAssignments.Any())
+                {
+                    foreach (var submission in Model.CompletedAssignments.Take(5))
+                    {
+                        <div style="border-left: 3px solid #10b981; padding-left: 1rem; margin-bottom: 1rem;">
+                            <p style="font-weight: 500; color: #1a202c; margin-bottom: 0.25rem;">@submission.Assignment.Title</p>
+                            <p style="color: #64748b; font-size: 0.875rem;">Grade: @(submission.Grade != null ? submission.Grade.ToString() : "Pending")</p>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <p style="color: #64748b; font-size: 0.875rem;">No completed assignments</p>
+                }
+            </div>
+
+            <div>
+                <h3 style="font-weight: 600; color: #f59e0b; margin-bottom: 1rem;">Pending (@Model.PendingAssignments.Count)</h3>
+                @if (Model.PendingAssignments.Any())
+                {
+                    foreach (var assignment in Model.PendingAssignments.Take(5))
+                    {
+                        <div style="border-left: 3px solid #f59e0b; padding-left: 1rem; margin-bottom: 1rem;">
+                            <p style="font-weight: 500; color: #1a202c; margin-bottom: 0.25rem;">@assignment.Title</p>
+                            <p style="color: #64748b; font-size: 0.875rem;">Due: @assignment.DueDate.ToString("MMM dd, yyyy")</p>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <p style="color: #64748b; font-size: 0.875rem;">No pending assignments</p>
+                }
+            </div>
+        </div>
+    </div>
+}
+else if (Model.User.Role == "Lecturer")
+{
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+        <!-- Assigned Courses -->
+        <div style="background: white; border-radius: 12px; padding: 2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+            <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem; color: #1a202c;">Assigned Courses</h2>
+            @if (Model.Courses.Any())
+            {
+                <div style="space-y: 1rem;">
+                    @foreach (var course in Model.Courses)
+                    {
+                        <div style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
+                            <h3 style="font-weight: 600; color: #1a202c; margin-bottom: 0.5rem;">@course.CourseName</h3>
+                            <p style="color: #64748b; font-size: 0.875rem; margin-bottom: 0.5rem;">@course.CourseCode</p>
+                            <div style="display: flex; justify-content: between; align-items: center;">
+                                <span style="background: #dbeafe; color: #1e40af; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.75rem;">
+                                    @course.Enrollments.Count Students
+                                </span>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <p style="color: #64748b; text-align: center; padding: 2rem;">No assigned courses</p>
+            }
+        </div>
+
+        <!-- Course Statistics -->
+        <div style="background: white; border-radius: 12px; padding: 2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+            <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem; color: #1a202c;">Course Statistics</h2>
+            
+            @if (Model.Courses.Any())
+            {
+                <div style="margin-bottom: 2rem;">
+                    <h3 style="font-weight: 600; color: #1a202c; margin-bottom: 1rem;">Student Distribution</h3>
+                    @foreach (var course in Model.Courses.OrderByDescending(c => c.Enrollments.Count))
+                    {
+                        <div style="margin-bottom: 1rem;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                <span style="font-size: 0.875rem; color: #1a202c;">@course.CourseName</span>
+                                <span style="font-size: 0.875rem; color: #64748b;">@course.Enrollments.Count students</span>
+                            </div>
+                            <div style="background: #f1f5f9; border-radius: 4px; height: 8px; overflow: hidden;">
+                                @{
+                                    var maxStudents = Model.Courses.Max(c => c.Enrollments.Count);
+                                    var percentage = maxStudents > 0 ? (course.Enrollments.Count * 100 / maxStudents) : 0;
+                                }
+                                <div style="background: #4f46e5; height: 100%; width: @(percentage)%;"></div>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <div>
+                    <h3 style="font-weight: 600; color: #1a202c; margin-bottom: 1rem;">Assignments Created</h3>
+                    <p style="font-size: 2rem; font-weight: 700; color: #4f46e5; text-align: center;">@Model.Assignments.Count</p>
+                    <p style="color: #64748b; text-align: center; font-size: 0.875rem;">Total assignments across all courses</p>
+                </div>
+            }
+            else
+            {
+                <p style="color: #64748b; text-align: center; padding: 2rem;">No course data available</p>
+            }
+        </div>
+    </div>
+}
+else if (Model.User.Role == "Administrator")
+{
+    <div style="background: white; border-radius: 12px; padding: 2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); text-align: center;">
+        <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem; color: #1a202c;">Administrator Account</h2>
+        <p style="color: #64748b; font-size: 1.1rem;">This user has full administrative privileges to manage the university system.</p>
+        <div style="margin-top: 2rem; padding: 1.5rem; background: #fef3c7; border-radius: 8px; border-left: 4px solid #f59e0b;">
+            <p style="color: #92400e; font-weight: 500;">Administrative users have access to all system features including user management, course administration, and system reports.</p>
+        </div>
+    </div>
+}

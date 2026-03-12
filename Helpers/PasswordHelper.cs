@@ -2,7 +2,7 @@ using System;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace uniManage.Models
+namespace uniManage.Helpers
 {
     public static class PasswordHelper
     {
@@ -20,5 +20,4 @@ namespace uniManage.Models
             }
         }
     }
-}
 }

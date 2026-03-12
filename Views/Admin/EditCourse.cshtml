@@ -1,53 +1,132 @@
 @model uniManage.Models.Course
 
 @{
-    Layout = "~/Views/Shared/_Layout.cshtml";
     ViewBag.Title = "Edit Course";
+    ViewBag.CurrentPage = "Courses";
+    Layout = "~/Views/Admin/_AdminLayout.cshtml";
 }
 
-<h2>Edit Course</h2>
+<!-- Header -->
+<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem;">
+    <div>
+        <a href="@Url.Action("Courses", "Admin")" style="color: #4f46e5; text-decoration: none; display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; font-weight: 500;">
+            <i class="fas fa-arrow-left"></i>
+            BACK TO COURSES
+        </a>
+        <h1 style="font-size: 2rem; font-weight: 700; color: #1a202c; margin: 0;">Edit Course</h1>
+        <p style="color: #64748b; margin: 0.5rem 0 0 0;">Update course syllabus, credits, and assigned faculty.</p>
+    </div>
+    <div style="display: flex; gap: 1rem;">
+        <a href="@Url.Action("Courses", "Admin")" style="background: white; color: #64748b; border: 1px solid #e2e8f0; padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 600; text-decoration: none; display: flex; align-items: center;">
+            Discard
+        </a>
+        <button type="submit" form="editCourseForm" style="background: #4f46e5; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 600; cursor: pointer;">
+            Save Changes
+        </button>
+    </div>
+</div>
 
-@using (Html.BeginForm("EditCourse", "Admin", FormMethod.Post))
+@using (Html.BeginForm("EditCourse", "Admin", FormMethod.Post, new { id = "editCourseForm" }))
 {
     @Html.AntiForgeryToken()
     @Html.HiddenFor(m => m.CourseId)
 
-    <div class="form-group">
-        <label>Course Code</label>
-        @Html.TextBoxFor(m => m.CourseCode, new { @class = "form-control" })
+    <!-- General Information Section -->
+    <div style="background: white; border-radius: 12px; padding: 2rem; margin-bottom: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 2rem;">
+            <div style="width: 32px; height: 32px; background: #4f46e5; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-info" style="color: white; font-size: 0.875rem;"></i>
+            </div>
+            <h2 style="font-size: 1.25rem; font-weight: 600; color: #1a202c; margin: 0;">General Information</h2>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+            <div>
+                <label style="display: block; font-weight: 500; margin-bottom: 0.5rem; color: #1a202c;">Course Title</label>
+                @Html.TextBoxFor(m => m.CourseName, new { 
+                    @class = "form-control", 
+                    @style = "width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.95rem;",
+                    placeholder = "Enter course title"
+                })
+            </div>
+            <div>
+                <label style="display: block; font-weight: 500; margin-bottom: 0.5rem; color: #1a202c;">Course Code</label>
+                @Html.TextBoxFor(m => m.CourseCode, new { 
+                    @class = "form-control", 
+                    @style = "width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.95rem;",
+                    placeholder = "e.g., CS101"
+                })
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+            <div>
+                <label style="display: block; font-weight: 500; margin-bottom: 0.5rem; color: #1a202c;">Department</label>
+                @Html.DropDownListFor(m => m.Department, new SelectList(ViewBag.Departments, "DepartmentName", "DepartmentName", Model.Department), "Select Department", new { 
+                    @style = "width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.95rem; background: white;"
+                })
+            </div>
+            <div>
+                <label style="display: block; font-weight: 500; margin-bottom: 0.5rem; color: #1a202c;">Credits</label>
+                @Html.TextBoxFor(m => m.Credits, new { 
+                    @class = "form-control", 
+                    type = "number",
+                    @style = "width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.95rem;",
+                    placeholder = "Enter credit hours"
+                })
+            </div>
+        </div>
     </div>
 
-    <div class="form-group">
-        <label>Course Name</label>
-        @Html.TextBoxFor(m => m.CourseName, new { @class = "form-control" })
+    <!-- Faculty Assignment Section -->
+    <div style="background: white; border-radius: 12px; padding: 2rem; margin-bottom: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 2rem;">
+            <div style="width: 32px; height: 32px; background: #4f46e5; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-user-tie" style="color: white; font-size: 0.875rem;"></i>
+            </div>
+            <h2 style="font-size: 1.25rem; font-weight: 600; color: #1a202c; margin: 0;">Faculty Assignment</h2>
+        </div>
+
+        <div>
+            <label style="display: block; font-weight: 500; margin-bottom: 0.5rem; color: #1a202c;">Primary Instructor</label>
+            <select name="LecturerId" style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.95rem; background: white;">
+                <option value="">Select Primary Instructor</option>
+                @foreach (var lecturer in ViewBag.Lecturers)
+                {
+                    <option value="@lecturer.UserId" @(Model.LecturerId == lecturer.UserId ? "selected" : "")>@lecturer.User.FullName - @lecturer.Department</option>
+                }
+            </select>
+            <small style="color: #64748b; font-size: 0.875rem; margin-top: 0.5rem; display: block;">Assign the main lecturer for this course module.</small>
+        </div>
     </div>
 
-    <div class="form-group">
-        <label>Description</label>
-        @Html.TextAreaFor(m => m.Description, new { @class = "form-control", rows = 4 })
-    </div>
+    <!-- Course Details Section -->
+    <div style="background: white; border-radius: 12px; padding: 2rem; margin-bottom: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 2rem;">
+            <div style="width: 32px; height: 32px; background: #4f46e5; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-file-alt" style="color: white; font-size: 0.875rem;"></i>
+            </div>
+            <h2 style="font-size: 1.25rem; font-weight: 600; color: #1a202c; margin: 0;">Course Details</h2>
+        </div>
 
-    <div class="form-group">
-        <label>Credits</label>
-        @Html.TextBoxFor(m => m.Credits, new { @class = "form-control", type = "number" })
-    </div>
+        <div style="margin-bottom: 1.5rem;">
+            <label style="display: block; font-weight: 500; margin-bottom: 0.5rem; color: #1a202c;">Description</label>
+            @Html.TextAreaFor(m => m.Description, new { 
+                @class = "form-control", 
+                rows = 6,
+                @style = "width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.95rem; resize: vertical;",
+                placeholder = "Provide a comprehensive description of the course content, objectives, and learning outcomes..."
+            })
+        </div>
 
-    <div class="form-group">
-        <label>Max Enrollment</label>
-        @Html.TextBoxFor(m => m.MaxEnrollment, new { @class = "form-control", type = "number" })
+        <div>
+            <label style="display: block; font-weight: 500; margin-bottom: 0.5rem; color: #1a202c;">Max Enrollment</label>
+            @Html.TextBoxFor(m => m.MaxEnrollment, new { 
+                @class = "form-control", 
+                type = "number",
+                @style = "width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.95rem;",
+                placeholder = "Maximum number of students"
+            })
+        </div>
     </div>
-
-    <div class="form-group">
-        <label>Lecturer</label>
-        <select name="LecturerId" class="form-control">
-            <option value="">Select Lecturer</option>
-            @foreach (var lecturer in ViewBag.Lecturers)
-            {
-                <option value="@lecturer.UserId" @(Model.LecturerId == lecturer.UserId ? "selected" : "")>@lecturer.User.FullName</option>
-            }
-        </select>
-    </div>
-
-    <button type="submit" class="btn btn-primary">Update</button>
-    <a href="@Url.Action("Courses", "Admin")" class="btn btn-secondary">Cancel</a>
 }

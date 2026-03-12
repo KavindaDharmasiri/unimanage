@@ -101,6 +101,7 @@
     <Compile Include="Models\AssignmentSubmission.cs" />
     <Compile Include="Models\Course.cs" />
     <Compile Include="Models\CourseMaterial.cs" />
+    <Compile Include="Models\Department.cs" />
     <Compile Include="Models\Enrollment.cs" />
     <Compile Include="Models\Lecturer.cs" />
     <Compile Include="Models\Message.cs" />
@@ -139,6 +140,7 @@
     <Content Include="Views\Admin\CreateCourse.cshtml" />
     <Content Include="Views\Admin\EditCourse.cshtml" />
     <Content Include="Views\Admin\DeleteCourse.cshtml" />
+    <Content Include="Views\Admin\Departments.cshtml" />
     <Content Include="Views\Admin\Reports.cshtml" />
     <Content Include="Views\Admin\CoursePopularityReport.cshtml" />
     <Content Include="Views\Admin\StudentPerformanceReport.cshtml" />

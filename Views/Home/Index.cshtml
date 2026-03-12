@@ -1,106 +1,492 @@
+@{
+    Layout = null;
+}
+
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UniManage - University Course Management System</title>
+    <title>UniManage - The Operating System for Higher Education</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            font-family: 'Segoe UI', Tahoma, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            line-height: 1.6;
+            color: #1a202c;
+            background: #ffffff;
         }
+        
+        /* Header */
+        .navbar {
+            background: #ffffff;
+            padding: 1rem 0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .navbar-brand {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #4f46e5 !important;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .nav-link {
+            color: #64748b !important;
+            font-weight: 500;
+            margin: 0 1rem;
+            transition: color 0.2s;
+        }
+        .nav-link:hover {
+            color: #4f46e5 !important;
+        }
+        .btn-primary {
+            background: #4f46e5;
+            border: none;
+            padding: 0.5rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+        .btn-outline-primary {
+            color: #4f46e5;
+            border-color: #4f46e5;
+            padding: 0.5rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+        
+        /* Hero Section */
         .hero {
-            padding: 100px 0;
-            color: white;
-            text-align: center;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            padding: 5rem 0;
+            position: relative;
+            overflow: hidden;
+        }
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 50%;
+            height: 100%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="2" fill="%23e2e8f0"/></svg>') repeat;
+            opacity: 0.3;
+        }
+        .hero-content {
+            position: relative;
+            z-index: 2;
         }
         .hero h1 {
             font-size: 3.5rem;
-            font-weight: 700;
+            font-weight: 800;
+            line-height: 1.1;
             margin-bottom: 1.5rem;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        .hero .highlight {
+            color: #4f46e5;
         }
         .hero p {
-            font-size: 1.3rem;
+            font-size: 1.25rem;
+            color: #64748b;
             margin-bottom: 2rem;
-            opacity: 0.95;
+            max-width: 500px;
         }
-        .feature-card {
+        .badge-new {
+            background: #dbeafe;
+            color: #1e40af;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: inline-block;
+        }
+        .hero-image {
+            position: relative;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        .hero-image img {
+            width: 100%;
+            height: auto;
+        }
+        .grade-badge {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
             background: rgba(255,255,255,0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 16px;
-            padding: 2rem;
-            margin: 1rem;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-            transition: transform 0.3s;
+            padding: 1rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
-        .feature-card:hover {
-            transform: translateY(-10px);
+        .grade-badge .icon {
+            color: #10b981;
+            font-size: 1.5rem;
         }
-        .feature-icon {
-            font-size: 3rem;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+        .grade-badge .text {
+            font-size: 0.875rem;
+            color: #64748b;
+            margin: 0;
+        }
+        .grade-badge .number {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #1a202c;
+            margin: 0;
+        }
+        
+        /* Stats Section */
+        .stats {
+            padding: 3rem 0;
+            background: #ffffff;
+        }
+        .stat-item {
+            text-align: center;
+            padding: 1rem;
+        }
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #1a202c;
+            margin-bottom: 0.5rem;
+        }
+        .stat-label {
+            color: #64748b;
+            font-weight: 500;
+        }
+        
+        /* Features Section */
+        .features {
+            padding: 5rem 0;
+            background: #f8fafc;
+        }
+        .features h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            text-align: center;
             margin-bottom: 1rem;
         }
-        .btn-hero {
-            background: white;
-            color: #667eea;
-            padding: 1rem 3rem;
-            border-radius: 50px;
-            font-weight: 600;
-            font-size: 1.1rem;
-            border: none;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
-            transition: all 0.3s;
+        .features .subtitle {
+            text-align: center;
+            color: #64748b;
+            font-size: 1.125rem;
+            margin-bottom: 3rem;
         }
-        .btn-hero:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 12px 32px rgba(0,0,0,0.3);
-            color: #667eea;
+        .feature-card {
+            background: #ffffff;
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            height: 100%;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .feature-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        .feature-card.highlighted {
+            border: 2px solid #4f46e5;
+            transform: scale(1.05);
+        }
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            background: #dbeafe;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+        }
+        .feature-icon i {
+            font-size: 1.5rem;
+            color: #4f46e5;
+        }
+        .feature-card h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+        .feature-list li {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            color: #64748b;
+        }
+        .feature-list li i {
+            color: #10b981;
+            margin-right: 0.75rem;
+            font-size: 0.875rem;
+        }
+        
+        /* CTA Section */
+        .cta {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            padding: 4rem 0;
+            color: #ffffff;
+            text-align: center;
+            border-radius: 24px;
+            margin: 3rem 0;
+        }
+        .cta h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+        .cta p {
+            font-size: 1.125rem;
+            opacity: 0.9;
+            margin-bottom: 2rem;
+        }
+        .btn-white {
+            background: #ffffff;
+            color: #4f46e5;
+            border: none;
+            padding: 0.75rem 2rem;
+            border-radius: 8px;
+            font-weight: 600;
+            margin: 0 0.5rem;
+        }
+        .btn-outline-white {
+            background: transparent;
+            color: #ffffff;
+            border: 2px solid #ffffff;
+            padding: 0.75rem 2rem;
+            border-radius: 8px;
+            font-weight: 600;
+            margin: 0 0.5rem;
+        }
+        
+        /* Footer */
+        .footer {
+            background: #1e293b;
+            color: #94a3b8;
+            padding: 3rem 0 1rem;
+        }
+        .footer h5 {
+            color: #ffffff;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+        .footer a {
+            color: #94a3b8;
+            text-decoration: none;
+            display: block;
+            margin-bottom: 0.5rem;
+            transition: color 0.2s;
+        }
+        .footer a:hover {
+            color: #ffffff;
+        }
+        .footer-bottom {
+            border-top: 1px solid #334155;
+            padding-top: 2rem;
+            margin-top: 2rem;
+            text-align: center;
+        }
+        
+        @@media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="hero">
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg">
         <div class="container">
-            <img src="@Url.Content("~/Content/uni.png")" alt="UniManage" style="height: 80px; margin-bottom: 2rem;">
-            <h1>Welcome to UniManage</h1>
-            <p>Modern University Course Management System</p>
-            <a href="@Url.Action("Login", "Account")" class="btn btn-hero">
-                <i class="fas fa-sign-in-alt"></i> Get Started
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-graduation-cap"></i>
+                UniManage
             </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item"><a class="nav-link" href="#">Students</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">Lecturers</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">Admins</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">About</a></li>
+                </ul>
+                <div class="d-flex gap-2">
+                    <a href="@Url.Action("Login", "Account")" class="btn btn-outline-primary">Login</a>
+                    <a href="@Url.Action("Register", "Account")" class="btn btn-primary">Get Started</a>
+                </div>
+            </div>
         </div>
-    </div>
+    </nav>
 
-    <div class="container pb-5">
-        <div class="row">
-            <div class="col-md-4">
-                <div class="feature-card text-center">
-                    <i class="fas fa-graduation-cap feature-icon"></i>
-                    <h3>For Students</h3>
-                    <p>Enroll in courses, submit assignments, and track your grades</p>
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-6">
+                    <div class="hero-content">
+                        <span class="badge-new"><i class="fas fa-star"></i> NEW 2026 ACADEMIC SUITE</span>
+                        <h1>The Operating System for <span class="highlight">Higher Education.</span></h1>
+                        <p>Streamline campus operations, boost student engagement, and unify academic administration in one powerful, cloud-based platform.</p>
+                        <div class="d-flex gap-3">
+                            <a href="@Url.Action("Register", "Account")" class="btn btn-primary btn-lg">Request Demo</a>
+                            <a href="#features" class="btn btn-outline-primary btn-lg">Learn More</a>
+                        </div>
+                    </div>
                 </div>
-            </div>
-            <div class="col-md-4">
-                <div class="feature-card text-center">
-                    <i class="fas fa-chalkboard-teacher feature-icon"></i>
-                    <h3>For Lecturers</h3>
-                    <p>Manage courses, create assignments, and grade students</p>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="feature-card text-center">
-                    <i class="fas fa-user-shield feature-icon"></i>
-                    <h3>For Admins</h3>
-                    <p>Manage courses, users, and generate reports</p>
+                <div class="col-lg-6">
+                    <div class="hero-image">
+                        <img src="https://images.unsplash.com/photo-1481627834876-b7833e8f5570?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="University Library" class="img-fluid">
+                        <div class="grade-badge">
+                            <i class="fas fa-chart-line icon"></i>
+                            <p class="text">STUDENT GRADE</p>
+                            <p class="number">+24% Grade Avg</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="stats">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="stat-item">
+                        <div class="stat-number">450k+</div>
+                        <div class="stat-label">Active Students</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-item">
+                        <div class="stat-number">120+</div>
+                        <div class="stat-label">Global Institutions</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-item">
+                        <div class="stat-number">2M+</div>
+                        <div class="stat-label">Course Materials</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-item">
+                        <div class="stat-number">99.9%</div>
+                        <div class="stat-label">App Reliability</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features" id="features">
+        <div class="container">
+            <h2>One Platform, Three Experiences</h2>
+            <p class="subtitle">Specific tools designed for each pillar of the university ecosystem</p>
+            
+            <div class="row">
+                <div class="col-lg-4 mb-4">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-user-graduate"></i>
+                        </div>
+                        <h3>For Students</h3>
+                        <ul class="feature-list">
+                            <li><i class="fas fa-check-circle"></i> Interactive schedule & event calendar</li>
+                            <li><i class="fas fa-check-circle"></i> Grade and course registration</li>
+                            <li><i class="fas fa-check-circle"></i> Digital identity & campus services</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-lg-4 mb-4">
+                    <div class="feature-card highlighted">
+                        <div class="feature-icon">
+                            <i class="fas fa-chalkboard-teacher"></i>
+                        </div>
+                        <h3>For Lecturers</h3>
+                        <ul class="feature-list">
+                            <li><i class="fas fa-check-circle"></i> Advanced grading & feedback tools</li>
+                            <li><i class="fas fa-check-circle"></i> Real-time student attendance tracking</li>
+                            <li><i class="fas fa-check-circle"></i> LMS integration & resource sharing</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-lg-4 mb-4">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-users-cog"></i>
+                        </div>
+                        <h3>For Administrators</h3>
+                        <ul class="feature-list">
+                            <li><i class="fas fa-check-circle"></i> Deep-driven enrollment analytics</li>
+                            <li><i class="fas fa-check-circle"></i> Financial & payment management</li>
+                            <li><i class="fas fa-check-circle"></i> Campus facility & security controls</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="container">
+        <div class="cta">
+            <h2>Ready to transform your academic experience?</h2>
+            <p>Join over 120 institutions worldwide who are leading the way in educational digital transformation.</p>
+            <div>
+                <a href="@Url.Action("Register", "Account")" class="btn btn-white">Get Started Now</a>
+                <a href="#" class="btn btn-outline-white">Talk to Sales</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-3">
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="fas fa-graduation-cap" style="color: #4f46e5; font-size: 1.5rem; margin-right: 0.5rem;"></i>
+                        <h5 style="margin: 0; color: #ffffff;">UniManage</h5>
+                    </div>
+                    <p>Empowering the next generation of higher education through intelligent campus management software.</p>
+                </div>
+                <div class="col-lg-2">
+                    <h5>Platform</h5>
+                    <a href="#">For Universities</a>
+                    <a href="#">For Colleges</a>
+                    <a href="#">For K-12 Schools</a>
+                    <a href="#">API Documentation</a>
+                </div>
+                <div class="col-lg-2">
+                    <h5>Company</h5>
+                    <a href="#">About Us</a>
+                    <a href="#">Leadership</a>
+                    <a href="#">Careers</a>
+                    <a href="#">Privacy Policy</a>
+                </div>
+                <div class="col-lg-2">
+                    <h5>Contact</h5>
+                    <a href="mailto:contact@unimanage.edu">contact@unimanage.edu</a>
+                    <a href="tel:+1-800-000-1111">+1 800-000-1111</a>
+                    <a href="#">100 University Ave, Tech City</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; @DateTime.Now.Year UniManage. All rights reserved. Built for the future of education.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

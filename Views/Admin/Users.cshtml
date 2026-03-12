@@ -92,6 +92,7 @@
                         <span class="status-badge active">● Active</span>
                     </td>
                     <td>
+                        <a href="@Url.Action("ViewUser", "Admin", new { id = user.UserId })" class="btn-view" style="background: #10b981; color: white; padding: 0.5rem 1rem; border-radius: 6px; text-decoration: none; font-size: 0.875rem; margin-right: 0.5rem;">View</a>
                         <a href="#" class="btn-manage" onclick="openManageModal(event, this)">Manage</a>
                     </td>
                 </tr>
@@ -143,7 +144,16 @@
             
             <div style="margin-bottom: 1rem;">
                 <label style="display: block; font-weight: 500; margin-bottom: 0.5rem; color: #1a202c;">Department</label>
-                <input type="text" id="modalUserDept" style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.95rem;" required>
+                <select id="modalUserDept" style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.95rem; background: white;">
+                    <option value="">Select Department</option>
+                    @foreach (var department in ViewBag.Departments)
+                    {
+                        <option value="@department.DepartmentName">@department.DepartmentName</option>
+                    }
+                </select>
+                <small style="color: #64748b; font-size: 0.875rem; margin-top: 0.5rem; display: block;">
+                    @ViewBag.DepartmentDebug
+                </small>
             </div>
             
             <div style="margin-bottom: 1.5rem;">
@@ -195,12 +205,22 @@
             
             <div id="studentFields" style="display: none; margin-bottom: 1rem;">
                 <label style="display: block; font-weight: 500; margin-bottom: 0.5rem; color: #1a202c;">Student Number</label>
-                <input type="text" id="addStudentNumber" style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.95rem;">
+                <input type="text" id="addStudentNumber" style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.95rem; background: #f8fafc;" readonly>
+                <small style="color: #64748b; font-size: 0.875rem;">Student number will be auto-generated</small>
             </div>
             
             <div id="lecturerFields" style="display: none; margin-bottom: 1rem;">
                 <label style="display: block; font-weight: 500; margin-bottom: 0.5rem; color: #1a202c;">Department</label>
-                <input type="text" id="addDepartment" style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.95rem;">
+                <select id="addDepartment" style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.95rem; background: white;">
+                    <option value="">Select Department</option>
+                    @foreach (var department in ViewBag.Departments)
+                    {
+                        <option value="@department.DepartmentName">@department.DepartmentName</option>
+                    }
+                </select>
+                <small style="color: #64748b; font-size: 0.875rem; margin-top: 0.5rem; display: block;">
+                    @ViewBag.DepartmentDebug
+                </small>
             </div>
             
             <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1.5rem;">
@@ -301,8 +321,8 @@
             const status = row.cells[4].textContent.toLowerCase();
 
             const matchesSearch = name.includes(searchInput) || email.includes(searchInput);
-            const matchesRole = roleFilter === '' || role.includes(roleFilter);
-            const matchesStatus = statusFilter === '' || status.includes(statusFilter);
+            const matchesRole = roleFilter === '' || role === roleFilter || role.includes(roleFilter);
+            const matchesStatus = statusFilter === '' || status === statusFilter || (statusFilter === 'active' && status.includes('active')) || (statusFilter === 'inactive' && status.includes('inactive'));
 
             return matchesSearch && matchesRole && matchesStatus;
         });
@@ -402,6 +422,9 @@
     function deleteUser() {
         const userId = document.getElementById('modalUserId').value;
         
+        // Close modal first
+        closeManageModal();
+        
         Swal.fire({
             title: 'Delete User',
             text: 'Are you sure you want to delete this user? This action cannot be undone!',
@@ -443,7 +466,6 @@
                             confirmButtonColor: '#4f46e5'
                         });
                     }
-                    closeManageModal();
                 })
                 .catch(error => {
                     Swal.fire({
@@ -472,6 +494,33 @@
         const role = document.getElementById('addUserRole').value;
         document.getElementById('studentFields').style.display = role === 'Student' ? 'block' : 'none';
         document.getElementById('lecturerFields').style.display = role === 'Lecturer' ? 'block' : 'none';
+        
+        // Auto-generate student number when Student role is selected
+        if (role === 'Student') {
+            generateStudentNumber();
+        }
+    }
+
+    function generateStudentNumber() {
+        fetch('@Url.Action("GetNextStudentNumber", "Admin")', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('addStudentNumber').value = data.studentNumber;
+            } else {
+                console.error('Error generating student number:', data.message);
+                document.getElementById('addStudentNumber').value = 'E-0001'; // Fallback
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('addStudentNumber').value = 'E-0001'; // Fallback
+        });
     }
 
     document.getElementById('addUserForm').addEventListener('submit', function(e) {
@@ -481,7 +530,6 @@
         const email = document.getElementById('addUserEmail').value;
         const password = document.getElementById('addUserPassword').value;
         const role = document.getElementById('addUserRole').value;
-        const studentNumber = document.getElementById('addStudentNumber').value;
         const department = document.getElementById('addDepartment').value;
 
         // Close modal first
@@ -498,7 +546,7 @@
             cancelButtonText: 'Cancel'
         }).then((result) => {
             if (result.isConfirmed) {
-                // Send AJAX request to create user
+                // Send AJAX request to create user (studentNumber is auto-generated on backend)
                 fetch('@Url.Action("CreateUser", "Admin")', {
                     method: 'POST',
                     headers: {
@@ -509,7 +557,7 @@
                         email: email,
                         password: password,
                         role: role,
-                        studentNumber: studentNumber,
+                        studentNumber: '', // Not used - auto-generated on backend
                         department: department
                     })
                 })
@@ -549,7 +597,6 @@
                 document.getElementById('addUserEmail').value = email;
                 document.getElementById('addUserPassword').value = password;
                 document.getElementById('addUserRole').value = role;
-                document.getElementById('addStudentNumber').value = studentNumber;
                 document.getElementById('addDepartment').value = department;
                 toggleRoleFields();
             }

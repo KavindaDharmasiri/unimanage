@@ -1,39 +1,109 @@
 @{
     ViewBag.Title = "Admin Dashboard";
+    ViewBag.CurrentPage = "Dashboard";
+    Layout = "~/Views/Admin/_AdminLayout.cshtml";
 }
 
-<h2>Administrator Dashboard</h2>
+<h1 class="page-title">System Overview</h1>
+<p class="page-subtitle">Real-time performance and management metrics for the UniManage platform.</p>
 
-<div style="display: flex; gap: 20px; margin: 30px 0; flex-wrap: wrap;">
-    <div style="flex: 1; min-width: 200px; padding: 20px; background-color: #f4f4f4; border-radius: 5px;">
-        <h3>Total Courses</h3>
-        <p style="font-size: 36px; font-weight: bold;">@ViewBag.TotalCourses</p>
+<!-- Stats Grid -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon blue">
+            <i class="fas fa-users"></i>
+        </div>
+        <div class="stat-value">12,450</div>
+        <div class="stat-label">Total Users</div>
+        <div class="stat-change positive">+12.5%</div>
     </div>
     
-    <div style="flex: 1; min-width: 200px; padding: 20px; background-color: #f4f4f4; border-radius: 5px;">
-        <h3>Total Students</h3>
-        <p style="font-size: 36px; font-weight: bold;">@ViewBag.TotalStudents</p>
+    <div class="stat-card">
+        <div class="stat-icon orange">
+            <i class="fas fa-book"></i>
+        </div>
+        <div class="stat-value">856</div>
+        <div class="stat-label">Active Courses</div>
+        <div class="stat-change positive">+3.2%</div>
     </div>
     
-    <div style="flex: 1; min-width: 200px; padding: 20px; background-color: #f4f4f4; border-radius: 5px;">
-        <h3>Total Lecturers</h3>
-        <p style="font-size: 36px; font-weight: bold;">@ViewBag.TotalLecturers</p>
+    <div class="stat-card">
+        <div class="stat-icon green">
+            <i class="fas fa-server"></i>
+        </div>
+        <div class="stat-value">99.9%</div>
+        <div class="stat-label">System Health</div>
+        <div class="stat-change neutral">Stable</div>
     </div>
     
-    <div style="flex: 1; min-width: 200px; padding: 20px; background-color: #f4f4f4; border-radius: 5px;">
-        <h3>Total Enrollments</h3>
-        <p style="font-size: 36px; font-weight: bold;">@ViewBag.TotalEnrollments</p>
+    <div class="stat-card">
+        <div class="stat-icon red">
+            <i class="fas fa-clock"></i>
+        </div>
+        <div class="stat-value">124ms</div>
+        <div class="stat-label">Avg. Latency</div>
+        <div class="stat-change negative">-0.6s</div>
     </div>
 </div>
 
-<div style="margin-top: 30px;">
-    <h3>Quick Actions</h3>
-    <div style="display: flex; gap: 15px; margin-top: 15px; flex-wrap: wrap;">
-        @Html.ActionLink("Manage Courses", "Courses", null, new { style = "padding: 10px 20px; background-color: #333; color: white; text-decoration: none; border-radius: 3px;" })
-        @Html.ActionLink("Create Course", "CreateCourse", null, new { style = "padding: 10px 20px; background-color: #28a745; color: white; text-decoration: none; border-radius: 3px;" })
-        @Html.ActionLink("View Students", "Students", null, new { style = "padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 3px;" })
-        @Html.ActionLink("View Lecturers", "Lecturers", null, new { style = "padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 3px;" })
-        @Html.ActionLink("Reports", "Reports", null, new { style = "padding: 10px 20px; background-color: #333; color: white; text-decoration: none; border-radius: 3px;" })
-        @Html.ActionLink("Logout", "Logout", "Account", null, new { style = "padding: 10px 20px; background-color: #d9534f; color: white; text-decoration: none; border-radius: 3px;" })
+<!-- Recent User Registrations -->
+<div class="table-container">
+    <div class="table-header">
+        <h3 class="table-title">Recent User Registrations</h3>
+        <a href="@Url.Action("Students", "Admin")" class="view-all">View All</a>
     </div>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>User</th>
+                <th>Role</th>
+                <th>Department</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>
+                    <div class="user-info">
+                        <div class="user-avatar">SJ</div>
+                        <div>
+                            <div style="font-weight: 500;">Sarah Jenkins</div>
+                            <div style="font-size: 0.875rem; color: #64748b;">sarah.j@unimanage.edu</div>
+                        </div>
+                    </div>
+                </td>
+                <td>Professor</td>
+                <td>Computer Science</td>
+                <td><span class="status-badge active">Active</span></td>
+            </tr>
+            <tr>
+                <td>
+                    <div class="user-info">
+                        <div class="user-avatar">MC</div>
+                        <div>
+                            <div style="font-weight: 500;">Michael Chen</div>
+                            <div style="font-size: 0.875rem; color: #64748b;">m.chen@unimanage.edu</div>
+                        </div>
+                    </div>
+                </td>
+                <td>Student</td>
+                <td>Mathematics</td>
+                <td><span class="status-badge pending">Pending</span></td>
+            </tr>
+            <tr>
+                <td>
+                    <div class="user-info">
+                        <div class="user-avatar">DW</div>
+                        <div>
+                            <div style="font-weight: 500;">David Wilson</div>
+                            <div style="font-size: 0.875rem; color: #64748b;">d.wilson@unimanage.edu</div>
+                        </div>
+                    </div>
+                </td>
+                <td>Staff</td>
+                <td>Registrar Office</td>
+                <td><span class="status-badge active">Active</span></td>
+            </tr>
+        </tbody>
+    </table>
 </div>

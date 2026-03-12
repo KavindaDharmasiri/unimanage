@@ -1,47 +1,100 @@
 @model uniManage.Models.Message
-
 @{
-    Layout = "~/Views/Shared/_Layout.cshtml";
     ViewBag.Title = "Send Message";
+    ViewBag.CurrentPage = "Messages";
+    Layout = "~/Views/Admin/_AdminLayout.cshtml";
 }
 
-<h2>Send Message</h2>
+<div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem;">
+    <a href="@Url.Action("Messages", "Admin")" style="color: #64748b; text-decoration: none; display: flex; align-items: center; gap: 0.5rem;">
+        <i class="fas fa-arrow-left"></i>
+        Back to Messages
+    </a>
+</div>
 
-@using (Html.BeginForm("SendMessage", "Admin", FormMethod.Post))
-{
-    @Html.AntiForgeryToken()
-    
-    <div class="form-group">
-        <label>To:</label>
-        <div style="margin-bottom: 10px;">
-            <button type="button" class="btn btn-sm btn-secondary" onclick="selectAll()">Select All</button>
-            <button type="button" class="btn btn-sm btn-secondary" onclick="selectByRole('Administrator')">Admins Only</button>
-            <button type="button" class="btn btn-sm btn-secondary" onclick="selectByRole('Lecturer')">Lecturers Only</button>
-            <button type="button" class="btn btn-sm btn-secondary" onclick="selectByRole('Student')">Students Only</button>
-            <button type="button" class="btn btn-sm btn-secondary" onclick="clearAll()">Clear All</button>
+<div style="background: white; border-radius: 12px; padding: 2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+    <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem;">
+        <div style="width: 50px; height: 50px; background: #4f46e5; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white;">
+            <i class="fas fa-paper-plane" style="font-size: 1.25rem;"></i>
         </div>
-        <select name="receiverIds" id="receiverSelect" class="form-control" multiple size="10" required>
-            @foreach (var user in ViewBag.Users)
-            {
-                <option value="@user.UserId" data-role="@user.Role" @(ViewBag.ReceiverId == user.UserId ? "selected" : "")>@user.FullName (@user.Role)</option>
-            }
-        </select>
-        <small class="form-text text-muted">Hold Ctrl/Cmd to select multiple recipients</small>
+        <div>
+            <h1 style="font-size: 1.75rem; font-weight: 700; margin: 0; color: #1a202c;">Send New Message</h1>
+            <p style="color: #64748b; margin: 0;">Compose and send messages to university users</p>
+        </div>
     </div>
-    
-    <div class="form-group">
-        <label>Subject:</label>
-        <input type="text" name="Subject" class="form-control" value="@ViewBag.Subject" required />
-    </div>
-    
-    <div class="form-group">
-        <label>Message:</label>
-        <textarea name="Body" class="form-control" rows="5" required></textarea>
-    </div>
-    
-    <button type="submit" class="btn btn-primary">Send</button>
-    <a href="@Url.Action("Messages", "Admin")" class="btn btn-secondary">Cancel</a>
-}
+
+    @using (Html.BeginForm("SendMessage", "Admin", FormMethod.Post))
+    {
+        @Html.AntiForgeryToken()
+        
+        <!-- Recipients Section -->
+        <div style="margin-bottom: 2rem;">
+            <label style="display: block; font-weight: 600; margin-bottom: 1rem; color: #1a202c; font-size: 1.1rem;">Recipients</label>
+            
+            <!-- Quick Selection Buttons -->
+            <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1rem; padding: 1rem; background: #f8fafc; border-radius: 8px;">
+                <button type="button" onclick="selectAll()" style="background: #4f46e5; color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.875rem; font-weight: 500; cursor: pointer;">
+                    <i class="fas fa-users"></i> Select All
+                </button>
+                <button type="button" onclick="selectByRole('Administrator')" style="background: #ef4444; color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.875rem; font-weight: 500; cursor: pointer;">
+                    <i class="fas fa-user-shield"></i> Admins Only
+                </button>
+                <button type="button" onclick="selectByRole('Lecturer')" style="background: #f59e0b; color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.875rem; font-weight: 500; cursor: pointer;">
+                    <i class="fas fa-chalkboard-teacher"></i> Lecturers Only
+                </button>
+                <button type="button" onclick="selectByRole('Student')" style="background: #10b981; color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.875rem; font-weight: 500; cursor: pointer;">
+                    <i class="fas fa-user-graduate"></i> Students Only
+                </button>
+                <button type="button" onclick="clearAll()" style="background: #64748b; color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.875rem; font-weight: 500; cursor: pointer;">
+                    <i class="fas fa-times"></i> Clear All
+                </button>
+            </div>
+            
+            <!-- Recipients List -->
+            <select name="receiverIds" id="receiverSelect" multiple size="8" required style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.95rem; background: white;">
+                @foreach (var user in ViewBag.Users)
+                {
+                    <option value="@user.UserId" data-role="@user.Role" @(ViewBag.ReceiverId == user.UserId ? "selected" : "") style="padding: 0.5rem;">
+                        @user.FullName (@user.Role)
+                    </option>
+                }
+            </select>
+            <small style="color: #64748b; font-size: 0.875rem; margin-top: 0.5rem; display: block;">
+                <i class="fas fa-info-circle"></i> Hold Ctrl/Cmd to select multiple recipients
+            </small>
+        </div>
+        
+        <!-- Subject -->
+        <div style="margin-bottom: 2rem;">
+            <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: #1a202c; font-size: 1.1rem;">Subject</label>
+            <input type="text" name="Subject" value="@ViewBag.Subject" required style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.95rem;" placeholder="Enter message subject...">
+        </div>
+        
+        <!-- Message Body -->
+        <div style="margin-bottom: 2rem;">
+            <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: #1a202c; font-size: 1.1rem;">Message</label>
+            <textarea name="Body" rows="8" required style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.95rem; resize: vertical;" placeholder="Type your message here..."></textarea>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div style="display: flex; gap: 1rem; justify-content: flex-end; padding-top: 1rem; border-top: 1px solid #e2e8f0;">
+            <a href="@Url.Action("Messages", "Admin")" style="padding: 0.75rem 1.5rem; border: 1px solid #e2e8f0; border-radius: 8px; background: white; color: #64748b; font-weight: 500; text-decoration: none; display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fas fa-times"></i>
+                Cancel
+            </a>
+            <button type="submit" style="padding: 0.75rem 1.5rem; border: none; border-radius: 8px; background: #4f46e5; color: white; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fas fa-paper-plane"></i>
+                Send Message
+            </button>
+        </div>
+    }
+</div>
+
+<!-- Selected Recipients Counter -->
+<div id="recipientCounter" style="position: fixed; bottom: 2rem; right: 2rem; background: #4f46e5; color: white; padding: 1rem; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: none;">
+    <div style="font-weight: 600; margin-bottom: 0.25rem;">Recipients Selected</div>
+    <div id="counterText" style="font-size: 0.875rem;">0 users</div>
+</div>
 
 <script>
 function selectAll() {
@@ -49,6 +102,7 @@ function selectAll() {
     for (var i = 0; i < select.options.length; i++) {
         select.options[i].selected = true;
     }
+    updateCounter();
 }
 
 function selectByRole(role) {
@@ -56,6 +110,7 @@ function selectByRole(role) {
     for (var i = 0; i < select.options.length; i++) {
         select.options[i].selected = select.options[i].getAttribute('data-role') === role;
     }
+    updateCounter();
 }
 
 function clearAll() {
@@ -63,5 +118,34 @@ function clearAll() {
     for (var i = 0; i < select.options.length; i++) {
         select.options[i].selected = false;
     }
+    updateCounter();
 }
+
+function updateCounter() {
+    var select = document.getElementById('receiverSelect');
+    var selectedCount = 0;
+    for (var i = 0; i < select.options.length; i++) {
+        if (select.options[i].selected) {
+            selectedCount++;
+        }
+    }
+    
+    var counter = document.getElementById('recipientCounter');
+    var counterText = document.getElementById('counterText');
+    
+    if (selectedCount > 0) {
+        counter.style.display = 'block';
+        counterText.textContent = selectedCount + ' user' + (selectedCount !== 1 ? 's' : '');
+    } else {
+        counter.style.display = 'none';
+    }
+}
+
+// Update counter when selection changes
+document.getElementById('receiverSelect').addEventListener('change', updateCounter);
+
+// Initialize counter on page load
+window.onload = function() {
+    updateCounter();
+};
 </script>

@@ -15,13 +15,78 @@ namespace uniManage.Controllers
             if (Session["UserId"] == null || Session["UserRole"].ToString() != "Administrator")
                 return RedirectToAction("Login", "Account");
 
+            // Get basic counts
+            var totalUsers = db.Users.Count();
+            var totalStudents = db.Students.Count();
+            var totalLecturers = db.Lecturers.Count();
+            var totalCourses = db.Courses.Count();
+            var totalEnrollments = db.Enrollments.Count();
+            var activeEnrollments = db.Enrollments.Count(e => e.Status == "Active");
+            var pendingEnrollments = db.Enrollments.Count(e => e.Status == "Pending");
+
+            // Get recent user registrations (last 10)
+            var recentUsers = db.Users
+                .OrderByDescending(u => u.CreatedDate)
+                .Take(10)
+                .ToList();
+
+            var recentRegistrations = new List<RecentUserRegistration>();
+            var colors = new[] { "#f59e0b", "#ef4444", "#06b6d4", "#10b981", "#8b5cf6", "#f97316", "#ec4899", "#84cc16" };
+            var colorIndex = 0;
+
+            foreach (var user in recentUsers)
+            {
+                var department = "N/A";
+                var status = "Active";
+
+                // Get department based on role
+                if (user.Role == "Student")
+                {
+                    var student = db.Students.FirstOrDefault(s => s.UserId == user.UserId);
+                    department = "General"; // You can enhance this based on your student model
+                }
+                else if (user.Role == "Lecturer")
+                {
+                    var lecturer = db.Lecturers.FirstOrDefault(l => l.UserId == user.UserId);
+                    department = lecturer?.Department ?? "N/A";
+                }
+                else if (user.Role == "Administrator")
+                {
+                    department = "Administration";
+                }
+
+                // Generate initials
+                var names = user.FullName.Split(' ');
+                var initials = names.Length >= 2 ? 
+                    string.Format("{0}{1}", names[0][0], names[names.Length - 1][0]) : 
+                    user.FullName.Length >= 2 ? user.FullName.Substring(0, 2).ToUpper() : user.FullName.ToUpper();
+
+                recentRegistrations.Add(new RecentUserRegistration
+                {
+                    FullName = user.FullName,
+                    Email = user.Email,
+                    Role = user.Role == "Administrator" ? "Admin" : user.Role,
+                    Department = department,
+                    Status = status,
+                    CreatedDate = user.CreatedDate,
+                    Initials = initials,
+                    AvatarColor = colors[colorIndex % colors.Length]
+                });
+                colorIndex++;
+            }
+
             var viewModel = new AdminDashboardViewModel
             {
-                TotalStudents = db.Students.Count(),
-                TotalLecturers = db.Lecturers.Count(),
-                TotalCourses = db.Courses.Count(),
-                TotalEnrollments = db.Enrollments.Count(),
-                PopularCourses = db.Courses.Include("Enrollments").OrderByDescending(c => c.Enrollments.Count).Take(5).ToList()
+                TotalStudents = totalStudents,
+                TotalLecturers = totalLecturers,
+                TotalCourses = totalCourses,
+                TotalEnrollments = totalEnrollments,
+                ActiveEnrollments = activeEnrollments,
+                PendingEnrollments = pendingEnrollments,
+                PopularCourses = db.Courses.Include("Enrollments").OrderByDescending(c => c.Enrollments.Count).Take(5).ToList(),
+                RecentRegistrations = recentRegistrations,
+                SystemUptime = 99.9, // You can calculate this based on your system monitoring
+                AverageLatency = new Random().Next(100, 200) // Simulate latency, replace with real monitoring data
             };
 
             return View(viewModel);
@@ -39,6 +104,7 @@ namespace uniManage.Controllers
             if (Session["UserId"] == null) return RedirectToAction("Login", "Account");
             ViewBag.Lecturers = db.Lecturers.Include("User").ToList();
             ViewBag.Courses = db.Courses.ToList();
+            ViewBag.Departments = db.Departments.Where(d => d.Status == "Active").OrderBy(d => d.DepartmentName).ToList();
             return View();
         }
 
@@ -67,6 +133,7 @@ namespace uniManage.Controllers
             var course = db.Courses.Find(id);
             ViewBag.Lecturers = db.Lecturers.Include("User").ToList();
             ViewBag.Courses = db.Courses.Where(c => c.CourseId != id).ToList();
+            ViewBag.Departments = db.Departments.Where(d => d.Status == "Active").OrderBy(d => d.DepartmentName).ToList();
             return View(course);
         }
 
@@ -162,7 +229,7 @@ namespace uniManage.Controllers
             var csv = "Course Code,Course Name,Enrollments\n";
             foreach (var item in report)
             {
-                csv += $"{item.CourseCode},{item.CourseName},{item.EnrollmentCount}\n";
+                csv += string.Format("{0},{1},{2}\n", item.CourseCode, item.CourseName, item.EnrollmentCount);
             }
 
             return File(System.Text.Encoding.UTF8.GetBytes(csv), "text/csv", "CourseReport.csv");
@@ -209,8 +276,340 @@ namespace uniManage.Controllers
             if (Session["UserId"] == null || Session["UserRole"].ToString() != "Administrator")
                 return RedirectToAction("Login", "Account");
             
-            var students = db.Students.Include("User").ToList();
-            return View(students);
+            // Get all users with their details (same as Users action)
+            var allUsers = db.Users.OrderByDescending(u => u.CreatedDate).ToList();
+            var userList = new List<UserManagementViewModel>();
+            var colors = new[] { "#4f46e5", "#f59e0b", "#ef4444", "#06b6d4", "#10b981", "#8b5cf6", "#f97316", "#ec4899" };
+            var colorIndex = 0;
+
+            foreach (var user in allUsers)
+            {
+                var department = "N/A";
+                var userId = "N/A";
+
+                // Get department and ID based on role
+                if (user.Role == "Student")
+                {
+                    var student = db.Students.FirstOrDefault(s => s.UserId == user.UserId);
+                    department = "General";
+                    userId = student?.StudentNumber ?? "N/A";
+                }
+                else if (user.Role == "Lecturer")
+                {
+                    var lecturer = db.Lecturers.FirstOrDefault(l => l.UserId == user.UserId);
+                    department = lecturer?.Department ?? "N/A";
+                    userId = "LEC-" + user.UserId.ToString("D4");
+                }
+                else if (user.Role == "Administrator")
+                {
+                    department = "Administration";
+                    userId = "ADM-" + user.UserId.ToString("D4");
+                }
+
+                // Generate initials
+                var names = user.FullName.Split(' ');
+                var initials = names.Length >= 2 ? 
+                    string.Format("{0}{1}", names[0][0], names[names.Length - 1][0]) : 
+                    user.FullName.Length >= 2 ? user.FullName.Substring(0, 2).ToUpper() : user.FullName.ToUpper();
+
+                userList.Add(new UserManagementViewModel
+                {
+                    UserId = user.UserId,
+                    FullName = user.FullName,
+                    Email = user.Email,
+                    Role = user.Role,
+                    Department = department,
+                    UserIdentifier = userId,
+                    Status = "Active",
+                    CreatedDate = user.CreatedDate,
+                    Initials = initials,
+                    AvatarColor = colors[colorIndex % colors.Length]
+                });
+                colorIndex++;
+            }
+
+            return View(userList);
+        }
+
+        public ActionResult Users()
+        {
+            if (Session["UserId"] == null || Session["UserRole"].ToString() != "Administrator")
+                return RedirectToAction("Login", "Account");
+            
+            // Get all users with their details
+            var allUsers = db.Users.OrderByDescending(u => u.CreatedDate).ToList();
+            var userList = new List<UserManagementViewModel>();
+            var colors = new[] { "#4f46e5", "#f59e0b", "#ef4444", "#06b6d4", "#10b981", "#8b5cf6", "#f97316", "#ec4899" };
+            var colorIndex = 0;
+
+            foreach (var user in allUsers)
+            {
+                var department = "N/A";
+                var userId = "N/A";
+
+                // Get department and ID based on role
+                if (user.Role == "Student")
+                {
+                    var student = db.Students.FirstOrDefault(s => s.UserId == user.UserId);
+                    department = "General";
+                    userId = student != null ? student.StudentNumber : "N/A";
+                }
+                else if (user.Role == "Lecturer")
+                {
+                    var lecturer = db.Lecturers.FirstOrDefault(l => l.UserId == user.UserId);
+                    department = lecturer != null ? lecturer.Department : "N/A";
+                    userId = "LEC-" + user.UserId.ToString("D4");
+                }
+                else if (user.Role == "Administrator")
+                {
+                    department = "Administration";
+                    userId = "ADM-" + user.UserId.ToString("D4");
+                }
+
+                // Generate initials
+                var names = user.FullName.Split(' ');
+                var initials = names.Length >= 2 ? 
+                    names[0][0].ToString() + names[names.Length - 1][0].ToString() : 
+                    user.FullName.Length >= 2 ? user.FullName.Substring(0, 2).ToUpper() : user.FullName.ToUpper();
+
+                userList.Add(new UserManagementViewModel
+                {
+                    UserId = user.UserId,
+                    FullName = user.FullName,
+                    Email = user.Email,
+                    Role = user.Role,
+                    Department = department,
+                    UserIdentifier = userId,
+                    Status = "Active",
+                    CreatedDate = user.CreatedDate,
+                    Initials = initials,
+                    AvatarColor = colors[colorIndex % colors.Length]
+                });
+                colorIndex++;
+            }
+
+            // Initialize ViewBag.Departments to prevent null reference errors
+            ViewBag.Departments = new List<dynamic>();
+            ViewBag.DepartmentDebug = "Initializing departments...";
+
+            // Try to get departments, with detailed error handling
+            try
+            {
+                // Test if we can access the Departments table
+                var departments = db.Departments.Where(d => d.Status == "Active").OrderBy(d => d.DepartmentName).ToList();
+                ViewBag.Departments = departments;
+                ViewBag.DepartmentDebug = "Successfully loaded " + departments.Count + " active departments from database";
+            }
+            catch (Exception ex)
+            {
+                // Log the specific error for debugging
+                ViewBag.DepartmentDebug = "Error accessing Departments table: " + ex.Message;
+                
+                // Create a fallback list with anonymous objects that have DepartmentName property
+                ViewBag.Departments = new List<dynamic>
+                {
+                    new { DepartmentName = "Computer Science" },
+                    new { DepartmentName = "Mathematics" },
+                    new { DepartmentName = "Physics" },
+                    new { DepartmentName = "Chemistry" },
+                    new { DepartmentName = "Biology" },
+                    new { DepartmentName = "Economics" }
+                };
+            }
+
+            return View(userList);
+        }
+
+        [HttpPost]
+        public JsonResult UpdateUser(int userId, string fullName, string email, string role, string department)
+        {
+            try
+            {
+                if (Session["UserId"] == null || Session["UserRole"].ToString() != "Administrator")
+                    return Json(new { success = false, message = "Unauthorized" });
+
+                var user = db.Users.Find(userId);
+                if (user == null)
+                    return Json(new { success = false, message = "User not found" });
+
+                // Update user details
+                user.FullName = fullName;
+                user.Email = email;
+                user.Role = role;
+
+                // Update department based on role
+                if (role == "Lecturer")
+                {
+                    var lecturer = db.Lecturers.FirstOrDefault(l => l.UserId == userId);
+                    if (lecturer != null)
+                    {
+                        lecturer.Department = department;
+                    }
+                }
+
+                db.SaveChanges();
+                return Json(new { success = true, message = "User updated successfully" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Error updating user: " + ex.Message });
+            }
+        }
+
+        [HttpPost]
+        public JsonResult DeleteUser(int userId)
+        {
+            try
+            {
+                if (Session["UserId"] == null || Session["UserRole"].ToString() != "Administrator")
+                    return Json(new { success = false, message = "Unauthorized" });
+
+                var user = db.Users.Find(userId);
+                if (user == null)
+                    return Json(new { success = false, message = "User not found" });
+
+                // Don't allow deleting yourself
+                if (userId == (int)Session["UserId"])
+                    return Json(new { success = false, message = "You cannot delete your own account" });
+
+                // Delete related records first
+                if (user.Role == "Student")
+                {
+                    var student = db.Students.FirstOrDefault(s => s.UserId == userId);
+                    if (student != null)
+                    {
+                        // Delete enrollments
+                        var enrollments = db.Enrollments.Where(e => e.StudentId == student.UserId).ToList();
+                        db.Enrollments.RemoveRange(enrollments);
+
+                        // Delete submissions
+                        var submissions = db.AssignmentSubmissions.Where(s => s.StudentId == student.UserId).ToList();
+                        db.AssignmentSubmissions.RemoveRange(submissions);
+
+                        db.Students.Remove(student);
+                    }
+                }
+                else if (user.Role == "Lecturer")
+                {
+                    var lecturer = db.Lecturers.FirstOrDefault(l => l.UserId == userId);
+                    if (lecturer != null)
+                    {
+                        // Check if lecturer has courses
+                        var hasCourses = db.Courses.Any(c => c.LecturerId == userId);
+                        if (hasCourses)
+                            return Json(new { success = false, message = "Cannot delete lecturer with assigned courses" });
+
+                        db.Lecturers.Remove(lecturer);
+                    }
+                }
+
+                // Delete messages
+                var messages = db.Messages.Where(m => m.SenderId == userId || m.ReceiverId == userId).ToList();
+                db.Messages.RemoveRange(messages);
+
+                // Delete user
+                db.Users.Remove(user);
+                db.SaveChanges();
+
+                return Json(new { success = true, message = "User deleted successfully" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Error deleting user: " + ex.Message });
+            }
+        }
+
+        [HttpPost]
+        public JsonResult CreateUser(string fullName, string email, string password, string role, string studentNumber, string department)
+        {
+            try
+            {
+                if (Session["UserId"] == null || Session["UserRole"].ToString() != "Administrator")
+                    return Json(new { success = false, message = "Unauthorized" });
+
+                if (db.Users.Any(u => u.Email == email))
+                    return Json(new { success = false, message = "Email already exists" });
+
+                var newUser = new User
+                {
+                    FullName = fullName,
+                    Email = email,
+                    Password = HashPassword(password),
+                    Role = role,
+                    CreatedDate = DateTime.Now
+                };
+
+                db.Users.Add(newUser);
+                db.SaveChanges();
+
+                if (role == "Student")
+                {
+                    // Auto-generate student number using the same logic as registration
+                    var lastStudent = db.Students.OrderByDescending(s => s.StudentNumber).FirstOrDefault();
+                    string autoStudentNumber;
+                    if (lastStudent != null && !string.IsNullOrEmpty(lastStudent.StudentNumber))
+                    {
+                        var lastNumber = int.Parse(lastStudent.StudentNumber.Replace("E-", ""));
+                        autoStudentNumber = string.Format("E-{0:D4}", lastNumber + 1);
+                    }
+                    else
+                    {
+                        autoStudentNumber = "E-0001";
+                    }
+
+                    var student = new Student
+                    {
+                        UserId = newUser.UserId,
+                        StudentNumber = autoStudentNumber
+                    };
+                    db.Students.Add(student);
+                }
+                else if (role == "Lecturer")
+                {
+                    var lecturer = new Lecturer
+                    {
+                        UserId = newUser.UserId,
+                        Department = !string.IsNullOrEmpty(department) ? department : "General"
+                    };
+                    db.Lecturers.Add(lecturer);
+                }
+
+                db.SaveChanges();
+                return Json(new { success = true, message = "User created successfully" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Error creating user: " + ex.Message });
+            }
+        }
+
+        [HttpGet]
+        public JsonResult GetNextStudentNumber()
+        {
+            try
+            {
+                if (Session["UserId"] == null || Session["UserRole"].ToString() != "Administrator")
+                    return Json(new { success = false, message = "Unauthorized" }, JsonRequestBehavior.AllowGet);
+
+                var lastStudent = db.Students.OrderByDescending(s => s.StudentNumber).FirstOrDefault();
+                string nextStudentNumber;
+                
+                if (lastStudent != null && !string.IsNullOrEmpty(lastStudent.StudentNumber))
+                {
+                    var lastNumber = int.Parse(lastStudent.StudentNumber.Replace("E-", ""));
+                    nextStudentNumber = string.Format("E-{0:D4}", lastNumber + 1);
+                }
+                else
+                {
+                    nextStudentNumber = "E-0001";
+                }
+
+                return Json(new { success = true, studentNumber = nextStudentNumber }, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Error generating student number: " + ex.Message }, JsonRequestBehavior.AllowGet);
+            }
         }
 
         public ActionResult Lecturers()
@@ -229,6 +628,106 @@ namespace uniManage.Controllers
             ViewBag.CourseCounts = courseCounts;
             
             return View(lecturers);
+        }
+
+        public ActionResult Departments()
+        {
+            if (Session["UserId"] == null || Session["UserRole"].ToString() != "Administrator")
+                return RedirectToAction("Login", "Account");
+            
+            var departments = db.Departments.OrderByDescending(d => d.CreatedDate).ToList();
+            return View(departments);
+        }
+
+        [HttpPost]
+        public JsonResult CreateDepartment(string departmentName)
+        {
+            try
+            {
+                if (Session["UserId"] == null || Session["UserRole"].ToString() != "Administrator")
+                    return Json(new { success = false, message = "Unauthorized" });
+
+                if (string.IsNullOrWhiteSpace(departmentName))
+                    return Json(new { success = false, message = "Department name is required" });
+
+                if (db.Departments.Any(d => d.DepartmentName.ToLower() == departmentName.ToLower()))
+                    return Json(new { success = false, message = "Department already exists" });
+
+                var department = new Department
+                {
+                    DepartmentName = departmentName.Trim(),
+                    Status = "Active",
+                    CreatedDate = DateTime.Now
+                };
+
+                db.Departments.Add(department);
+                db.SaveChanges();
+
+                return Json(new { success = true, message = "Department created successfully" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Error creating department: " + ex.Message });
+            }
+        }
+
+        [HttpPost]
+        public JsonResult UpdateDepartment(int departmentId, string departmentName, string status)
+        {
+            try
+            {
+                if (Session["UserId"] == null || Session["UserRole"].ToString() != "Administrator")
+                    return Json(new { success = false, message = "Unauthorized" });
+
+                var department = db.Departments.Find(departmentId);
+                if (department == null)
+                    return Json(new { success = false, message = "Department not found" });
+
+                if (string.IsNullOrWhiteSpace(departmentName))
+                    return Json(new { success = false, message = "Department name is required" });
+
+                // Check if another department with the same name exists
+                if (db.Departments.Any(d => d.DepartmentName.ToLower() == departmentName.ToLower() && d.DepartmentId != departmentId))
+                    return Json(new { success = false, message = "Department name already exists" });
+
+                department.DepartmentName = departmentName.Trim();
+                department.Status = status;
+                db.SaveChanges();
+
+                return Json(new { success = true, message = "Department updated successfully" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Error updating department: " + ex.Message });
+            }
+        }
+
+        [HttpPost]
+        public JsonResult DeleteDepartment(int departmentId)
+        {
+            try
+            {
+                if (Session["UserId"] == null || Session["UserRole"].ToString() != "Administrator")
+                    return Json(new { success = false, message = "Unauthorized" });
+
+                var department = db.Departments.Find(departmentId);
+                if (department == null)
+                    return Json(new { success = false, message = "Department not found" });
+
+                // Check if department has lecturers
+                var hasLecturers = db.Lecturers.Any(l => l.Department == department.DepartmentName);
+                if (hasLecturers)
+                    return Json(new { success = false, message = "Cannot delete department with assigned lecturers" });
+
+                db.Departments.Remove(department);
+                db.SaveChanges();
+
+                return Json(new { success = true, message = "Department deleted successfully" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Error deleting department: " + ex.Message });
+            }
         }
 
         public ActionResult Messages()
@@ -285,7 +784,7 @@ namespace uniManage.Controllers
                     });
                 }
                 db.SaveChanges();
-                TempData["Success"] = $"Message sent to {receiverIds.Length} recipient(s) successfully";
+                TempData["Success"] = string.Format("Message sent to {0} recipient(s) successfully", receiverIds.Length);
             }
             else
             {
@@ -295,10 +794,95 @@ namespace uniManage.Controllers
             return RedirectToAction("Messages");
         }
 
+        public ActionResult ViewUser(int id)
+        {
+            if (Session["UserId"] == null || Session["UserRole"].ToString() != "Administrator")
+                return RedirectToAction("Login", "Account");
+
+            var user = db.Users.Find(id);
+            if (user == null)
+                return HttpNotFound();
+
+            var viewModel = new UserDetailViewModel
+            {
+                User = user,
+                Courses = new List<Course>(),
+                Assignments = new List<Assignment>(),
+                CompletedAssignments = new List<AssignmentSubmission>(),
+                PendingAssignments = new List<Assignment>(),
+                StudentCount = 0,
+                Department = "N/A"
+            };
+
+            if (user.Role == "Student")
+            {
+                var student = db.Students.FirstOrDefault(s => s.UserId == id);
+                if (student != null)
+                {
+                    // Get enrolled courses
+                    var enrollments = db.Enrollments.Include("Course.Lecturer.User").Where(e => e.StudentId == id).ToList();
+                    viewModel.Courses = enrollments.Select(e => e.Course).ToList();
+
+                    // Get assignments for enrolled courses
+                    var courseIds = viewModel.Courses.Select(c => c.CourseId).ToList();
+                    viewModel.Assignments = db.Assignments.Where(a => courseIds.Contains(a.CourseId)).ToList();
+
+                    // Get completed assignments
+                    viewModel.CompletedAssignments = db.AssignmentSubmissions.Include("Assignment")
+                        .Where(s => s.StudentId == id && s.Grade != null).ToList();
+
+                    // Get pending assignments
+                    var completedAssignmentIds = viewModel.CompletedAssignments.Select(s => s.AssignmentId).ToList();
+                    viewModel.PendingAssignments = viewModel.Assignments
+                        .Where(a => !completedAssignmentIds.Contains(a.AssignmentId)).ToList();
+
+                    viewModel.Department = "General";
+                }
+            }
+            else if (user.Role == "Lecturer")
+            {
+                var lecturer = db.Lecturers.FirstOrDefault(l => l.UserId == id);
+                if (lecturer != null)
+                {
+                    // Get assigned courses
+                    viewModel.Courses = db.Courses.Include("Enrollments").Where(c => c.LecturerId == id).ToList();
+
+                    // Get total student count across all courses
+                    viewModel.StudentCount = viewModel.Courses.Sum(c => c.Enrollments.Count);
+
+                    // Get assignments created by this lecturer
+                    var courseIds = viewModel.Courses.Select(c => c.CourseId).ToList();
+                    viewModel.Assignments = db.Assignments.Where(a => courseIds.Contains(a.CourseId)).ToList();
+
+                    viewModel.Department = lecturer.Department != null ? lecturer.Department : "N/A";
+                }
+            }
+            else if (user.Role == "Administrator")
+            {
+                viewModel.Department = "Administration";
+            }
+
+            return View(viewModel);
+        }
+
         protected override void Dispose(bool disposing)
         {
             if (disposing) db.Dispose();
             base.Dispose(disposing);
+        }
+
+        private string HashPassword(string password)
+        {
+            using (System.Security.Cryptography.SHA256 sha256 = System.Security.Cryptography.SHA256.Create())
+            {
+                byte[] bytes = sha256.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
+                System.Text.StringBuilder builder = new System.Text.StringBuilder();
+                foreach (byte b in bytes)
+                {
+                    builder.Append(b.ToString("x2"));
+                }
+                return builder.ToString();
+            }
         }
     }
 }

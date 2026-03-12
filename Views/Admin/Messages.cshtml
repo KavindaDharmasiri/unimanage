@@ -1,39 +1,252 @@
 @model List<uniManage.Models.Message>
-
 @{
-    Layout = "~/Views/Shared/_Layout.cshtml";
     ViewBag.Title = "Messages";
+    ViewBag.CurrentPage = "Messages";
+    Layout = "~/Views/Admin/_AdminLayout.cshtml";
 }
 
-<h2>Messages</h2>
+<h1 class="page-title">Messages</h1>
+<p class="page-subtitle">Manage and monitor all system communications</p>
 
-<a href="@Url.Action("SendMessage", "Admin")" class="btn btn-primary">Send New Message</a>
+<!-- Stats Cards -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon blue">
+            <i class="fas fa-envelope"></i>
+        </div>
+        <div class="stat-value">@Model.Count</div>
+        <div class="stat-label">TOTAL MESSAGES</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon green">
+            <i class="fas fa-envelope-open"></i>
+        </div>
+        <div class="stat-value">@Model.Count(m => m.IsRead)</div>
+        <div class="stat-label">READ MESSAGES</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon orange">
+            <i class="fas fa-envelope-open-text"></i>
+        </div>
+        <div class="stat-value">@Model.Count(m => !m.IsRead)</div>
+        <div class="stat-label">UNREAD MESSAGES</div>
+    </div>
+</div>
+
+<!-- Send Message Button -->
+<div style="display: flex; justify-content: flex-end; margin-bottom: 1.5rem;">
+    <a href="@Url.Action("SendMessage", "Admin")" style="background: #4f46e5; color: white; padding: 0.75rem 1.5rem; border-radius: 8px; text-decoration: none; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
+        <i class="fas fa-plus"></i>
+        Send New Message
+    </a>
+</div>
+
+<!-- Filters -->
+<div class="filters">
+    <div class="filter-search">
+        <i class="fas fa-search"></i>
+        <input type="text" id="searchInput" placeholder="Search by sender, recipient, or subject..." onkeyup="filterTable()">
+    </div>
+    <select class="filter-dropdown" id="statusFilter" onchange="filterTable()">
+        <option value="">All Messages</option>
+        <option value="read">Read</option>
+        <option value="unread">Unread</option>
+    </select>
+    <button class="btn-filters">
+        <i class="fas fa-filter"></i>
+        More Filters
+    </button>
+</div>
 
 @if (TempData["Success"] != null)
 {
-    <div class="alert alert-success">@TempData["Success"]</div>
+    <div style="margin-bottom: 1.5rem; padding: 1rem; background: #d1fae5; border: 1px solid #a7f3d0; border-radius: 8px; color: #065f46;">
+        @TempData["Success"]
+    </div>
 }
 
-<table class="table">
-    <thead>
-        <tr>
-            <th>From</th>
-            <th>To</th>
-            <th>Subject</th>
-            <th>Date</th>
-            <th>Status</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var message in Model)
-        {
-            <tr style="cursor: pointer;" onclick="window.location='@Url.Action("ViewMessage", "Admin", new { id = message.MessageId })'">
-                <td>@message.Sender.FullName</td>
-                <td>@message.Receiver.FullName</td>
-                <td>@message.Subject</td>
-                <td>@message.SentDate.ToString("yyyy-MM-dd HH:mm")</td>
-                <td>@(message.IsRead ? "Read" : "Unread")</td>
+<!-- Messages Table -->
+<div class="table-container">
+    <table class="table" id="messagesTable">
+        <thead>
+            <tr>
+                <th>Message</th>
+                <th>Participants</th>
+                <th>Date & Time</th>
+                <th>Status</th>
+                <th>Actions</th>
             </tr>
+        </thead>
+        <tbody id="tableBody">
+            @foreach (var message in Model)
+            {
+                <tr data-message-id="@message.MessageId" 
+                    data-sender="@message.Sender.FullName" 
+                    data-receiver="@message.Receiver.FullName" 
+                    data-subject="@message.Subject"
+                    data-status="@(message.IsRead ? "read" : "unread")">
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <div style="width: 40px; height: 40px; background: @(message.IsRead ? "#64748b" : "#4f46e5"); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white;">
+                                <i class="fas fa-@(message.IsRead ? "envelope-open" : "envelope")" style="font-size: 0.875rem;"></i>
+                            </div>
+                            <div>
+                                <h4 style="font-weight: @(message.IsRead ? "500" : "700"); color: #1a202c; margin: 0; font-size: 0.95rem;">@message.Subject</h4>
+                                <p style="color: #64748b; margin: 0; font-size: 0.875rem;">From: @message.Sender.FullName</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div>
+                            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+                                <i class="fas fa-user" style="color: #64748b; font-size: 0.75rem;"></i>
+                                <span style="font-size: 0.875rem; color: #1a202c;">@message.Sender.FullName</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <i class="fas fa-arrow-right" style="color: #64748b; font-size: 0.75rem;"></i>
+                                <span style="font-size: 0.875rem; color: #1a202c;">@message.Receiver.FullName</span>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div>
+                            <div style="font-weight: 500; color: #1a202c; font-size: 0.875rem;">@message.SentDate.ToString("MMM dd, yyyy")</div>
+                            <div style="color: #64748b; font-size: 0.75rem;">@message.SentDate.ToString("HH:mm")</div>
+                        </div>
+                    </td>
+                    <td>
+                        @if (message.IsRead)
+                        {
+                            <span style="background: #d1fae5; color: #065f46; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.75rem; font-weight: 500;">Read</span>
+                        }
+                        else
+                        {
+                            <span style="background: #dbeafe; color: #1e40af; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.75rem; font-weight: 500;">Unread</span>
+                        }
+                    </td>
+                    <td>
+                        <a href="@Url.Action("ViewMessage", "Admin", new { id = message.MessageId })" style="background: #4f46e5; color: white; padding: 0.5rem 1rem; border-radius: 6px; text-decoration: none; font-size: 0.875rem; display: inline-flex; align-items: center; gap: 0.5rem;">
+                            <i class="fas fa-eye"></i>
+                            View
+                        </a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    
+    <!-- Pagination -->
+    <div class="pagination-container">
+        <div class="pagination-info">
+            Showing <span id="startIndex">1</span> to <span id="endIndex">@Math.Min(10, Model.Count)</span> of <span id="totalCount">@Model.Count</span> messages
+        </div>
+        <div class="pagination" id="paginationControls">
+            <a href="#" onclick="changePage('prev'); return false;" id="prevBtn">Previous</a>
+            <div id="pageNumbers"></div>
+            <a href="#" onclick="changePage('next'); return false;" id="nextBtn">Next</a>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentPage = 1;
+    let rowsPerPage = 10;
+    let filteredRows = [];
+
+    function initPagination() {
+        const table = document.getElementById('messagesTable');
+        const rows = Array.from(table.getElementsByTagName('tbody')[0].getElementsByTagName('tr'));
+        filteredRows = rows;
+        updatePagination();
+    }
+
+    function updatePagination() {
+        const totalRows = filteredRows.length;
+        const totalPages = Math.ceil(totalRows / rowsPerPage);
+        const startIndex = (currentPage - 1) * rowsPerPage;
+        const endIndex = Math.min(startIndex + rowsPerPage, totalRows);
+
+        // Hide all rows
+        filteredRows.forEach(row => row.style.display = 'none');
+
+        // Show only current page rows
+        for (let i = startIndex; i < endIndex; i++) {
+            if (filteredRows[i]) {
+                filteredRows[i].style.display = '';
+            }
         }
-    </tbody>
-</table>
+
+        // Update pagination info
+        document.getElementById('startIndex').textContent = totalRows > 0 ? startIndex + 1 : 0;
+        document.getElementById('endIndex').textContent = endIndex;
+        document.getElementById('totalCount').textContent = totalRows;
+
+        // Update page numbers
+        const pageNumbers = document.getElementById('pageNumbers');
+        pageNumbers.innerHTML = '';
+        
+        for (let i = 1; i <= totalPages; i++) {
+            if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+                const pageBtn = document.createElement('span');
+                pageBtn.textContent = i;
+                pageBtn.className = i === currentPage ? 'current' : '';
+                pageBtn.style.cssText = i === currentPage ? 
+                    'background: #4f46e5; color: white; border: 1px solid #4f46e5; padding: 0.5rem 0.75rem; border-radius: 6px; font-weight: 500; font-size: 0.875rem; cursor: pointer; margin: 0 0.25rem;' : 
+                    'color: #64748b; border: 1px solid #e2e8f0; padding: 0.5rem 0.75rem; border-radius: 6px; font-weight: 500; font-size: 0.875rem; cursor: pointer; margin: 0 0.25rem;';
+                pageBtn.onclick = () => {
+                    currentPage = i;
+                    updatePagination();
+                };
+                pageNumbers.appendChild(pageBtn);
+            } else if (i === currentPage - 2 || i === currentPage + 2) {
+                const dots = document.createElement('span');
+                dots.textContent = '...';
+                dots.style.cssText = 'padding: 0.5rem; color: #64748b;';
+                pageNumbers.appendChild(dots);
+            }
+        }
+
+        // Update prev/next buttons
+        document.getElementById('prevBtn').style.opacity = currentPage === 1 ? '0.5' : '1';
+        document.getElementById('prevBtn').style.pointerEvents = currentPage === 1 ? 'none' : 'auto';
+        document.getElementById('nextBtn').style.opacity = currentPage === totalPages ? '0.5' : '1';
+        document.getElementById('nextBtn').style.pointerEvents = currentPage === totalPages ? 'none' : 'auto';
+    }
+
+    function changePage(direction) {
+        const totalPages = Math.ceil(filteredRows.length / rowsPerPage);
+        if (direction === 'prev' && currentPage > 1) {
+            currentPage--;
+        } else if (direction === 'next' && currentPage < totalPages) {
+            currentPage++;
+        }
+        updatePagination();
+    }
+
+    function filterTable() {
+        const searchInput = document.getElementById('searchInput').value.toLowerCase();
+        const statusFilter = document.getElementById('statusFilter').value.toLowerCase();
+        const table = document.getElementById('messagesTable');
+        const rows = Array.from(table.getElementsByTagName('tbody')[0].getElementsByTagName('tr'));
+
+        filteredRows = rows.filter(row => {
+            const sender = row.dataset.sender ? row.dataset.sender.toLowerCase() : '';
+            const receiver = row.dataset.receiver ? row.dataset.receiver.toLowerCase() : '';
+            const subject = row.dataset.subject ? row.dataset.subject.toLowerCase() : '';
+            const status = row.dataset.status ? row.dataset.status.toLowerCase() : '';
+
+            const matchesSearch = sender.includes(searchInput) || receiver.includes(searchInput) || subject.includes(searchInput);
+            const matchesStatus = statusFilter === '' || status === statusFilter;
+
+            return matchesSearch && matchesStatus;
+        });
+
+        currentPage = 1;
+        updatePagination();
+    }
+
+    // Initialize pagination on page load
+    window.onload = function() {
+        initPagination();
+    };
+</script>

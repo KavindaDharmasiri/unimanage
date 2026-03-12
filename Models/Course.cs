@@ -27,6 +27,9 @@ namespace uniManage.Models
 
         public int? LecturerId { get; set; }
 
+        [StringLength(100)]
+        public string Department { get; set; }
+
         public virtual Lecturer Lecturer { get; set; }
         public virtual Course PrerequisiteCourse { get; set; }
         public virtual ICollection<Enrollment> Enrollments { get; set; }

@@ -1,32 +1,126 @@
 @model List<uniManage.Models.StudentReportViewModel>
-
 @{
-    Layout = "~/Views/Shared/_Layout.cshtml";
     ViewBag.Title = "Student Performance Report";
+    ViewBag.CurrentPage = "Reports";
+    Layout = "~/Views/Admin/_AdminLayout.cshtml";
 }
 
-<h2>Student Performance Report</h2>
+<div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem;">
+    <a href="@Url.Action("Reports", "Admin")" style="color: #64748b; text-decoration: none; display: flex; align-items: center; gap: 0.5rem;">
+        <i class="fas fa-arrow-left"></i>
+        Back to Reports
+    </a>
+</div>
 
-<table class="table">
-    <thead>
-        <tr>
-            <th>Student Number</th>
-            <th>Student Name</th>
-            <th>Average Grade</th>
-            <th>Total Submissions</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in Model)
-        {
-            <tr>
-                <td>@item.StudentNumber</td>
-                <td>@item.StudentName</td>
-                <td>@item.AverageGrade.ToString("F2")</td>
-                <td>@item.TotalSubmissions</td>
-            </tr>
-        }
-    </tbody>
-</table>
+<div style="background: white; border-radius: 12px; padding: 2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <div style="width: 50px; height: 50px; background: #10b981; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white;">
+                <i class="fas fa-user-graduate" style="font-size: 1.25rem;"></i>
+            </div>
+            <div>
+                <h1 style="font-size: 1.75rem; font-weight: 700; margin: 0; color: #1a202c;">Student Performance Report</h1>
+                <p style="color: #64748b; margin: 0;">Academic performance analytics and grade statistics</p>
+            </div>
+        </div>
+        <div style="display: flex; gap: 1rem;">
+            <button onclick="exportStudentReport()" style="background: #10b981; color: white; padding: 0.75rem 1.5rem; border: none; border-radius: 8px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fas fa-file-excel"></i>
+                Export CSV
+            </button>
+        </div>
+    </div>
 
-<a href="@Url.Action("Reports", "Admin")" class="btn btn-secondary">Back to Reports</a>
+    <!-- Summary Stats -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+        <div style="background: #f8fafc; padding: 1.5rem; border-radius: 8px; border-left: 4px solid #10b981;">
+            <div style="color: #64748b; font-size: 0.875rem; margin-bottom: 0.5rem;">Total Students</div>
+            <div style="font-size: 2rem; font-weight: 700; color: #10b981;">@Model.Count</div>
+        </div>
+        <div style="background: #f8fafc; padding: 1.5rem; border-radius: 8px; border-left: 4px solid #4f46e5;">
+            <div style="color: #64748b; font-size: 0.875rem; margin-bottom: 0.5rem;">Average Grade</div>
+            <div style="font-size: 2rem; font-weight: 700; color: #4f46e5;">@(Model.Any() ? Math.Round((double)Model.Average(s => s.AverageGrade), 1) : 0)</div>
+        </div>
+        <div style="background: #f8fafc; padding: 1.5rem; border-radius: 8px; border-left: 4px solid #f59e0b;">
+            <div style="color: #64748b; font-size: 0.875rem; margin-bottom: 0.5rem;">Total Submissions</div>
+            <div style="font-size: 2rem; font-weight: 700; color: #f59e0b;">@Model.Sum(s => s.TotalSubmissions)</div>
+        </div>
+        <div style="background: #f8fafc; padding: 1.5rem; border-radius: 8px; border-left: 4px solid #8b5cf6;">
+            <div style="color: #64748b; font-size: 0.875rem; margin-bottom: 0.5rem;">Top Performer</div>
+            <div style="font-size: 1.25rem; font-weight: 700; color: #8b5cf6;">@(Model.Any() ? Math.Round((double)Model.Max(s => s.AverageGrade), 1) + " avg" : "N/A")</div>
+        </div>
+    </div>
+
+    <!-- Students Table -->
+    <div class="table-container">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Student Details</th>
+                    <th>Academic Performance</th>
+                    <th>Submission Activity</th>
+                    <th>Grade Level</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.OrderByDescending(s => s.AverageGrade))
+                {
+                    var gradeLevel = item.AverageGrade >= 80 ? "Excellent" : item.AverageGrade >= 70 ? "Good" : item.AverageGrade >= 60 ? "Average" : "Needs Improvement";
+                    var gradeColor = item.AverageGrade >= 80 ? "#10b981" : item.AverageGrade >= 70 ? "#4f46e5" : item.AverageGrade >= 60 ? "#f59e0b" : "#ef4444";
+                    var maxGrade = Model.Max(s => s.AverageGrade);
+                    var gradePercentage = maxGrade > 0 ? (item.AverageGrade * 100 / maxGrade) : 0;
+                    
+                    <tr>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 1rem;">
+                                <div style="width: 40px; height: 40px; background: @gradeColor; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.875rem;">
+                                    @{
+                                        var names = item.StudentName.Split(' ');
+                                        var initials = names.Length >= 2 ? 
+                                            string.Format("{0}{1}", names[0][0], names[names.Length - 1][0]) : 
+                                            item.StudentName.Length >= 2 ? item.StudentName.Substring(0, 2).ToUpper() : item.StudentName.ToUpper();
+                                    }
+                                    @initials
+                                </div>
+                                <div>
+                                    <h4 style="font-weight: 600; color: #1a202c; margin: 0; font-size: 0.95rem;">@item.StudentName</h4>
+                                    <p style="color: #64748b; margin: 0; font-size: 0.875rem;">@item.StudentNumber</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 1rem;">
+                                <div style="font-size: 1.5rem; font-weight: 700; color: @gradeColor;">
+                                    @item.AverageGrade.ToString("F1")
+                                </div>
+                                <div style="flex: 1;">
+                                    <div style="background: #f1f5f9; border-radius: 4px; height: 8px; overflow: hidden; width: 80px;">
+                                        <div style="background: @gradeColor; height: 100%; width: @(item.AverageGrade)%;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <span style="background: #dbeafe; color: #1e40af; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.875rem; font-weight: 500;">
+                                    @item.TotalSubmissions submissions
+                                </span>
+                            </div>
+                        </td>
+                        <td>
+                            <span style="background: @gradeColor; color: white; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.75rem; font-weight: 500;">
+                                @gradeLevel
+                            </span>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+function exportStudentReport() {
+    alert('Feature coming soon: Export student performance data to CSV');
+}
+</script>

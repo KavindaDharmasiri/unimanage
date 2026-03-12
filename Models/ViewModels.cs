@@ -57,6 +57,23 @@ namespace uniManage.Models
         public int TotalCourses { get; set; }
         public int TotalEnrollments { get; set; }
         public List<Course> PopularCourses { get; set; }
+        public List<RecentUserRegistration> RecentRegistrations { get; set; }
+        public double SystemUptime { get; set; }
+        public int AverageLatency { get; set; }
+        public int ActiveEnrollments { get; set; }
+        public int PendingEnrollments { get; set; }
+    }
+
+    public class RecentUserRegistration
+    {
+        public string FullName { get; set; }
+        public string Email { get; set; }
+        public string Role { get; set; }
+        public string Department { get; set; }
+        public string Status { get; set; }
+        public DateTime CreatedDate { get; set; }
+        public string Initials { get; set; }
+        public string AvatarColor { get; set; }
     }
 
     public class CourseReportViewModel
@@ -80,5 +97,30 @@ namespace uniManage.Models
         public string Department { get; set; }
         public int CourseCount { get; set; }
         public int TotalStudents { get; set; }
+    }
+
+    public class UserManagementViewModel
+    {
+        public int UserId { get; set; }
+        public string FullName { get; set; }
+        public string Email { get; set; }
+        public string Role { get; set; }
+        public string Department { get; set; }
+        public string UserIdentifier { get; set; }
+        public string Status { get; set; }
+        public DateTime CreatedDate { get; set; }
+        public string Initials { get; set; }
+        public string AvatarColor { get; set; }
+    }
+
+    public class UserDetailViewModel
+    {
+        public User User { get; set; }
+        public List<Course> Courses { get; set; }
+        public List<Assignment> Assignments { get; set; }
+        public List<AssignmentSubmission> CompletedAssignments { get; set; }
+        public List<Assignment> PendingAssignments { get; set; }
+        public int StudentCount { get; set; }
+        public string Department { get; set; }
     }
 }

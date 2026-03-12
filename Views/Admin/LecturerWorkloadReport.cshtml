@@ -1,32 +1,171 @@
 @model List<uniManage.Models.LecturerReportViewModel>
-
 @{
-    Layout = "~/Views/Shared/_Layout.cshtml";
     ViewBag.Title = "Lecturer Workload Report";
+    ViewBag.CurrentPage = "Reports";
+    Layout = "~/Views/Admin/_AdminLayout.cshtml";
 }
 
-<h2>Lecturer Workload Report</h2>
+<div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem;">
+    <a href="@Url.Action("Reports", "Admin")" style="color: #64748b; text-decoration: none; display: flex; align-items: center; gap: 0.5rem;">
+        <i class="fas fa-arrow-left"></i>
+        Back to Reports
+    </a>
+</div>
 
-<table class="table">
-    <thead>
-        <tr>
-            <th>Lecturer Name</th>
-            <th>Department</th>
-            <th>Total Courses</th>
-            <th>Total Students</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in Model)
-        {
-            <tr>
-                <td>@item.LecturerName</td>
-                <td>@item.Department</td>
-                <td>@item.CourseCount</td>
-                <td>@item.TotalStudents</td>
-            </tr>
-        }
-    </tbody>
-</table>
+<div style="background: white; border-radius: 12px; padding: 2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <div style="width: 50px; height: 50px; background: #f59e0b; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white;">
+                <i class="fas fa-chalkboard-teacher" style="font-size: 1.25rem;"></i>
+            </div>
+            <div>
+                <h1 style="font-size: 1.75rem; font-weight: 700; margin: 0; color: #1a202c;">Lecturer Workload Report</h1>
+                <p style="color: #64748b; margin: 0;">Faculty workload distribution and teaching assignments</p>
+            </div>
+        </div>
+        <div style="display: flex; gap: 1rem;">
+            <button onclick="exportLecturerReport()" style="background: #f59e0b; color: white; padding: 0.75rem 1.5rem; border: none; border-radius: 8px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fas fa-file-excel"></i>
+                Export CSV
+            </button>
+        </div>
+    </div>
 
-<a href="@Url.Action("Reports", "Admin")" class="btn btn-secondary">Back to Reports</a>
+    <!-- Summary Stats -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+        <div style="background: #f8fafc; padding: 1.5rem; border-radius: 8px; border-left: 4px solid #f59e0b;">
+            <div style="color: #64748b; font-size: 0.875rem; margin-bottom: 0.5rem;">Total Lecturers</div>
+            <div style="font-size: 2rem; font-weight: 700; color: #f59e0b;">@Model.Count</div>
+        </div>
+        <div style="background: #f8fafc; padding: 1.5rem; border-radius: 8px; border-left: 4px solid #4f46e5;">
+            <div style="color: #64748b; font-size: 0.875rem; margin-bottom: 0.5rem;">Total Courses</div>
+            <div style="font-size: 2rem; font-weight: 700; color: #4f46e5;">@Model.Sum(l => l.CourseCount)</div>
+        </div>
+        <div style="background: #f8fafc; padding: 1.5rem; border-radius: 8px; border-left: 4px solid #10b981;">
+            <div style="color: #64748b; font-size: 0.875rem; margin-bottom: 0.5rem;">Total Students</div>
+            <div style="font-size: 2rem; font-weight: 700; color: #10b981;">@Model.Sum(l => l.TotalStudents)</div>
+        </div>
+        <div style="background: #f8fafc; padding: 1.5rem; border-radius: 8px; border-left: 4px solid #8b5cf6;">
+            <div style="color: #64748b; font-size: 0.875rem; margin-bottom: 0.5rem;">Avg. Workload</div>
+            <div style="font-size: 1.25rem; font-weight: 700; color: #8b5cf6;">@(Model.Any() ? Math.Round((double)Model.Average(l => l.CourseCount), 1) : 0) courses</div>
+        </div>
+    </div>
+
+    <!-- Lecturers Table -->
+    <div class="table-container">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Lecturer Details</th>
+                    <th>Department</th>
+                    <th>Course Load</th>
+                    <th>Student Count</th>
+                    <th>Workload Level</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.OrderByDescending(l => l.CourseCount))
+                {
+                    var workloadLevel = item.CourseCount >= 4 ? "High" : item.CourseCount >= 2 ? "Medium" : "Light";
+                    var workloadColor = item.CourseCount >= 4 ? "#ef4444" : item.CourseCount >= 2 ? "#f59e0b" : "#10b981";
+                    var maxCourses = Model.Any() ? Model.Max(l => l.CourseCount) : 1;
+                    var workloadPercentage = maxCourses > 0 ? (item.CourseCount * 100 / maxCourses) : 0;
+                    
+                    <tr>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 1rem;">
+                                <div style="width: 40px; height: 40px; background: @workloadColor; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.875rem;">
+                                    @{
+                                        var names = item.LecturerName.Split(' ');
+                                        var initials = names.Length >= 2 ? 
+                                            string.Format("{0}{1}", names[0][0], names[names.Length - 1][0]) : 
+                                            item.LecturerName.Length >= 2 ? item.LecturerName.Substring(0, 2).ToUpper() : item.LecturerName.ToUpper();
+                                    }
+                                    @initials
+                                </div>
+                                <div>
+                                    <h4 style="font-weight: 600; color: #1a202c; margin: 0; font-size: 0.95rem;">@item.LecturerName</h4>
+                                    <p style="color: #64748b; margin: 0; font-size: 0.875rem;">Faculty Member</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <i class="fas fa-building" style="color: #64748b; font-size: 0.875rem;"></i>
+                                <span style="color: #1a202c; font-weight: 500;">@item.Department</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 1rem;">
+                                <div style="font-size: 1.25rem; font-weight: 700; color: @workloadColor;">
+                                    @item.CourseCount
+                                </div>
+                                <div style="flex: 1;">
+                                    <div style="background: #f1f5f9; border-radius: 4px; height: 8px; overflow: hidden; width: 60px;">
+                                        <div style="background: @workloadColor; height: 100%; width: @(workloadPercentage)%;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <span style="background: #dbeafe; color: #1e40af; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.875rem; font-weight: 500;">
+                                    @item.TotalStudents students
+                                </span>
+                            </div>
+                        </td>
+                        <td>
+                            <span style="background: @workloadColor; color: white; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.75rem; font-weight: 500;">
+                                @workloadLevel Load
+                            </span>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Department Breakdown -->
+    @if (Model.Any())
+    {
+        <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #e2e8f0;">
+            <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1.5rem; color: #1a202c;">Department Workload Distribution</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+                @foreach (var dept in Model.GroupBy(l => l.Department))
+                {
+                    var deptCourses = dept.Sum(l => l.CourseCount);
+                    var deptStudents = dept.Sum(l => l.TotalStudents);
+                    var deptLecturers = dept.Count();
+                    
+                    <div style="background: #f8fafc; padding: 1.5rem; border-radius: 8px; border: 1px solid #e2e8f0;">
+                        <h4 style="font-weight: 600; color: #1a202c; margin-bottom: 1rem;">@dept.Key</h4>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; font-size: 0.875rem;">
+                            <div>
+                                <div style="color: #64748b;">Lecturers</div>
+                                <div style="font-weight: 600; color: #f59e0b;">@deptLecturers</div>
+                            </div>
+                            <div>
+                                <div style="color: #64748b;">Courses</div>
+                                <div style="font-weight: 600; color: #4f46e5;">@deptCourses</div>
+                            </div>
+                            <div>
+                                <div style="color: #64748b;">Students</div>
+                                <div style="font-weight: 600; color: #10b981;">@deptStudents</div>
+                            </div>
+                            <div>
+                                <div style="color: #64748b;">Avg Load</div>
+                                <div style="font-weight: 600; color: #8b5cf6;">@Math.Round((double)deptCourses / deptLecturers, 1)</div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+<script>
+function exportLecturerReport() {
+    alert('Feature coming soon: Export lecturer workload data to CSV');
+}
+</script>
