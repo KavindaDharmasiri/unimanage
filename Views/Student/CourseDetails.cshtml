@@ -1,40 +1,82 @@
 @model uniManage.Models.Course
-
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
     ViewBag.Title = "Course Details";
 }
 
-<h2>@Model.CourseName (@Model.CourseCode)</h2>
+<div class="page-title">@Model.CourseName (@Model.CourseCode)</div>
+<div class="page-subtitle">Course information, materials, and assignments</div>
 
-<div class="section">
-    <h3>Course Information</h3>
-    <p><strong>Description:</strong> @Model.Description</p>
-    <p><strong>Credits:</strong> @Model.Credits</p>
-    <p><strong>Lecturer:</strong> @(Model.Lecturer != null && Model.Lecturer.User != null ? Model.Lecturer.User.FullName : "Not Assigned")</p>
+<!-- Course Information -->
+<div class="stat-card" style="margin-bottom: 2rem;">
+    <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
+        <div class="stat-icon blue">
+            @Model.CourseCode.Substring(0, Math.Min(3, Model.CourseCode.Length))
+        </div>
+        <div>
+            <h3 style="margin: 0; font-size: 1.25rem; font-weight: 600;">Course Information</h3>
+            <p style="margin: 0; color: #64748b;">Overview and details</p>
+        </div>
+    </div>
+    
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+        <div>
+            <div style="color: #64748b; font-size: 0.875rem; margin-bottom: 0.25rem;">Description</div>
+            <div style="font-weight: 500;">@Model.Description</div>
+        </div>
+        <div>
+            <div style="color: #64748b; font-size: 0.875rem; margin-bottom: 0.25rem;">Credits</div>
+            <div style="font-weight: 500;">@Model.Credits</div>
+        </div>
+        <div>
+            <div style="color: #64748b; font-size: 0.875rem; margin-bottom: 0.25rem;">Lecturer</div>
+            <div style="font-weight: 500;">@(Model.Lecturer != null && Model.Lecturer.User != null ? Model.Lecturer.User.FullName : "Not Assigned")</div>
+        </div>
+    </div>
 </div>
 
-<div class="section">
-    <h3>Course Materials</h3>
+<!-- Course Materials -->
+<div class="table-container">
+    <div class="table-header">
+        <div class="table-title">Course Materials</div>
+    </div>
+    
     @if (Model.Materials != null && Model.Materials.Any())
     {
         <table class="table">
             <thead>
                 <tr>
-                    <th>Title</th>
+                    <th>Material Details</th>
                     <th>Description</th>
                     <th>Upload Date</th>
-                    <th>Action</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach (var material in Model.Materials)
                 {
                     <tr>
-                        <td>@material.Title</td>
+                        <td>
+                            <div class="user-info">
+                                <div class="user-avatar-table" style="background: #10b981;">
+                                    <i class="fas fa-file-alt"></i>
+                                </div>
+                                <div class="user-details">
+                                    <h4>@material.Title</h4>
+                                    <p>Course Material</p>
+                                </div>
+                            </div>
+                        </td>
                         <td>@material.Description</td>
-                        <td>@material.UploadDate.ToString("yyyy-MM-dd")</td>
-                        <td><a href="@material.FilePath" class="btn btn-sm btn-primary" download>Download</a></td>
+                        <td>
+                            <div class="user-details">
+                                <h4>@material.UploadDate.ToString("MMM dd, yyyy")</h4>
+                                <p>@material.UploadDate.ToString("HH:mm")</p>
+                            </div>
+                        </td>
+                        <td>
+                            <a href="@material.FilePath" class="btn-manage" style="color: #10b981;" download>Download</a>
+                        </td>
                     </tr>
                 }
             </tbody>
@@ -42,44 +84,73 @@
     }
     else
     {
-        <p>No materials available yet.</p>
+        <div style="text-align: center; padding: 3rem; color: #64748b;">
+            <i class="fas fa-folder-open" style="font-size: 3rem; margin-bottom: 1rem; color: #cbd5e1;"></i>
+            <h3 style="color: #374151; margin-bottom: 0.5rem;">No Materials Available</h3>
+            <p>No materials have been uploaded for this course yet.</p>
+        </div>
     }
 </div>
 
-<div class="section">
-    <h3>Assignments</h3>
+<!-- Assignments -->
+<div class="table-container">
+    <div class="table-header">
+        <div class="table-title">Assignments</div>
+    </div>
+    
     @if (Model.Assignments != null && Model.Assignments.Any())
     {
         <table class="table">
             <thead>
                 <tr>
-                    <th>Title</th>
-                    <th>Description</th>
+                    <th>Assignment Details</th>
                     <th>Due Date</th>
                     <th>Max Marks</th>
                     <th>Attachment</th>
-                    <th>Action</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach (var assignment in Model.Assignments)
                 {
+                    var daysUntilDue = (assignment.DueDate - DateTime.Now).Days;
+                    var isOverdue = assignment.DueDate < DateTime.Now;
+                    var iconColor = isOverdue ? "#ef4444" : daysUntilDue <= 3 ? "#f59e0b" : "#4f46e5";
+                    
                     <tr>
-                        <td>@assignment.Title</td>
-                        <td>@assignment.Description</td>
-                        <td>@assignment.DueDate.ToString("yyyy-MM-dd HH:mm")</td>
-                        <td>@assignment.MaxMarks</td>
+                        <td>
+                            <div class="user-info">
+                                <div class="user-avatar-table" style="background: @iconColor;">
+                                    <i class="fas fa-tasks"></i>
+                                </div>
+                                <div class="user-details">
+                                    <h4>@assignment.Title</h4>
+                                    <p>@assignment.Description</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="user-details">
+                                <h4>@assignment.DueDate.ToString("MMM dd, yyyy")</h4>
+                                <p>@assignment.DueDate.ToString("HH:mm")</p>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="status-badge active">@assignment.MaxMarks Points</span>
+                        </td>
                         <td>
                             @if (!string.IsNullOrEmpty(assignment.FilePath))
                             {
-                                <a href="@assignment.FilePath" download>Download</a>
+                                <a href="@assignment.FilePath" class="btn-manage" style="color: #10b981;" download>Download</a>
                             }
                             else
                             {
-                                <span>-</span>
+                                <span style="color: #64748b;">No attachment</span>
                             }
                         </td>
-                        <td><a href="@Url.Action("SubmitAssignment", "Student", new { id = assignment.AssignmentId })" class="btn btn-sm btn-primary">Submit</a></td>
+                        <td>
+                            <a href="@Url.Action("SubmitAssignment", "Student", new { id = assignment.AssignmentId })" class="btn-manage" style="color: @iconColor;">Submit</a>
+                        </td>
                     </tr>
                 }
             </tbody>
@@ -87,8 +158,14 @@
     }
     else
     {
-        <p>No assignments yet.</p>
+        <div style="text-align: center; padding: 3rem; color: #64748b;">
+            <i class="fas fa-clipboard-list" style="font-size: 3rem; margin-bottom: 1rem; color: #cbd5e1;"></i>
+            <h3 style="color: #374151; margin-bottom: 0.5rem;">No Assignments</h3>
+            <p>No assignments have been created for this course yet.</p>
+        </div>
     }
 </div>
 
-<a href="@Url.Action("Dashboard", "Student")" class="btn btn-secondary">Back to Dashboard</a>
+<div style="margin-top: 2rem;">
+    <a href="@Url.Action("Dashboard", "Student")" style="background: #64748b; color: white; padding: 0.5rem 1rem; border-radius: 6px; text-decoration: none; font-weight: 500;">Back to Dashboard</a>
+</div>

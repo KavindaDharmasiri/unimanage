@@ -1,51 +1,84 @@
 @model uniManage.Models.StudentDashboardViewModel
-
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
     ViewBag.Title = "Student Dashboard";
 }
 
-<h2>Welcome, @Model.Student.User.FullName</h2>
-<p>Student Number: @Model.Student.StudentNumber</p>
+<div class="page-title">Welcome back, @Model.Student.User.FullName!</div>
+<div class="page-subtitle">Student ID: @Model.Student.StudentNumber</div>
 
-<div class="dashboard-stats">
-    <div class="stat-box">
-        <h3>@Model.Enrollments.Count</h3>
-        <p>Enrolled Courses</p>
+<!-- Stats Grid -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon blue">
+            <i class="fas fa-book"></i>
+        </div>
+        <div class="stat-value">@Model.Enrollments.Count</div>
+        <div class="stat-label">Enrolled Courses</div>
+        <div class="stat-change neutral">Active enrollments</div>
     </div>
-    <div class="stat-box">
-        <h3>@Model.UpcomingAssignments.Count</h3>
-        <p>Upcoming Assignments</p>
+    
+    <div class="stat-card">
+        <div class="stat-icon orange">
+            <i class="fas fa-tasks"></i>
+        </div>
+        <div class="stat-value">@Model.UpcomingAssignments.Count</div>
+        <div class="stat-label">Upcoming Assignments</div>
+        <div class="stat-change neutral">Pending submissions</div>
     </div>
-    <div class="stat-box">
-        <h3>@Model.RecentSubmissions.Count</h3>
-        <p>Recent Submissions</p>
+    
+    <div class="stat-card">
+        <div class="stat-icon green">
+            <i class="fas fa-file-alt"></i>
+        </div>
+        <div class="stat-value">@Model.RecentSubmissions.Count</div>
+        <div class="stat-label">Recent Submissions</div>
+        <div class="stat-change neutral">Completed work</div>
     </div>
 </div>
 
-<div class="section">
-    <h3>My Courses</h3>
+<!-- My Courses Section -->
+<div class="table-container">
+    <div class="table-header">
+        <div class="table-title">My Courses</div>
+        <a href="@Url.Action("BrowseCourses", "Student")" class="view-all">Browse Courses</a>
+    </div>
+    
     @if (Model.Enrollments.Any())
     {
         <table class="table">
             <thead>
                 <tr>
-                    <th>Course Code</th>
-                    <th>Course Name</th>
+                    <th>Course Details</th>
                     <th>Lecturer</th>
                     <th>Status</th>
-                    <th>Action</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach (var enrollment in Model.Enrollments)
                 {
                     <tr>
-                        <td>@enrollment.Course.CourseCode</td>
-                        <td>@enrollment.Course.CourseName</td>
-                        <td>@(enrollment.Course.Lecturer != null && enrollment.Course.Lecturer.User != null ? enrollment.Course.Lecturer.User.FullName : "Not Assigned")</td>
-                        <td>@enrollment.Status</td>
-                        <td><a href="@Url.Action("CourseDetails", "Student", new { id = enrollment.CourseId })" class="btn btn-sm btn-primary">View Details</a></td>
+                        <td>
+                            <div class="user-info">
+                                <div class="user-avatar-table" style="background: #4f46e5;">
+                                    @enrollment.Course.CourseCode.Substring(0, Math.Min(3, enrollment.Course.CourseCode.Length))
+                                </div>
+                                <div class="user-details">
+                                    <h4>@enrollment.Course.CourseName</h4>
+                                    <p>@enrollment.Course.CourseCode</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            @(enrollment.Course.Lecturer != null && enrollment.Course.Lecturer.User != null ? enrollment.Course.Lecturer.User.FullName : "Not Assigned")
+                        </td>
+                        <td>
+                            <span class="status-badge @(enrollment.Status.ToLower() == "active" ? "active" : "pending")">@enrollment.Status</span>
+                        </td>
+                        <td>
+                            <a href="@Url.Action("CourseDetails", "Student", new { id = enrollment.CourseId })" class="btn-manage">View Details</a>
+                        </td>
                     </tr>
                 }
             </tbody>
@@ -53,12 +86,22 @@
     }
     else
     {
-        <p>You are not enrolled in any courses. <a href="@Url.Action("BrowseCourses", "Student")">Browse Courses</a></p>
+        <div style="text-align: center; padding: 3rem; color: #64748b;">
+            <i class="fas fa-book-open" style="font-size: 3rem; margin-bottom: 1rem; color: #cbd5e1;"></i>
+            <h3 style="margin-bottom: 0.5rem; color: #374151;">No Enrolled Courses</h3>
+            <p style="margin-bottom: 1.5rem;">You haven't enrolled in any courses yet. Start exploring available courses.</p>
+            <a href="@Url.Action("BrowseCourses", "Student")" style="background: #4f46e5; color: white; padding: 0.5rem 1rem; border-radius: 6px; text-decoration: none; font-weight: 500;">Browse Available Courses</a>
+        </div>
     }
 </div>
 
-<div class="section">
-    <h3>Upcoming Assignments</h3>
+<!-- Upcoming Assignments Section -->
+<div class="table-container">
+    <div class="table-header">
+        <div class="table-title">Upcoming Assignments</div>
+        <a href="@Url.Action("Assignments", "Student")" class="view-all">View All</a>
+    </div>
+    
     @if (Model.UpcomingAssignments.Any())
     {
         <table class="table">
@@ -67,17 +110,42 @@
                     <th>Assignment</th>
                     <th>Course</th>
                     <th>Due Date</th>
-                    <th>Action</th>
+                    <th>Priority</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
-                @foreach (var assignment in Model.UpcomingAssignments)
+                @foreach (var assignment in Model.UpcomingAssignments.OrderBy(a => a.DueDate).Take(5))
                 {
+                    var daysUntilDue = (assignment.DueDate - DateTime.Now).Days;
+                    var priorityLevel = daysUntilDue <= 1 ? "High" : daysUntilDue <= 3 ? "Medium" : "Low";
+                    var priorityClass = daysUntilDue <= 1 ? "status-badge" : daysUntilDue <= 3 ? "status-badge pending" : "status-badge active";
+                    
                     <tr>
-                        <td>@assignment.Title</td>
-                        <td>@assignment.Course.CourseName</td>
-                        <td>@assignment.DueDate.ToString("yyyy-MM-dd")</td>
-                        <td><a href="@Url.Action("SubmitAssignment", "Student", new { id = assignment.AssignmentId })" class="btn btn-sm btn-primary">Submit</a></td>
+                        <td>
+                            <div class="user-details">
+                                <h4>@assignment.Title</h4>
+                                <p>Assignment</p>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="user-details">
+                                <h4>@assignment.Course.CourseName</h4>
+                                <p>@assignment.Course.CourseCode</p>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="user-details">
+                                <h4>@assignment.DueDate.ToString("MMM dd, yyyy")</h4>
+                                <p>@assignment.DueDate.ToString("HH:mm")</p>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="@priorityClass">@priorityLevel Priority</span>
+                        </td>
+                        <td>
+                            <a href="@Url.Action("SubmitAssignment", "Student", new { id = assignment.AssignmentId })" class="btn-manage" style="color: #10b981;">Submit</a>
+                        </td>
                     </tr>
                 }
             </tbody>
@@ -85,6 +153,10 @@
     }
     else
     {
-        <p>No upcoming assignments.</p>
+        <div style="text-align: center; padding: 3rem; color: #64748b;">
+            <i class="fas fa-clipboard-check" style="font-size: 3rem; margin-bottom: 1rem; color: #cbd5e1;"></i>
+            <h3 style="margin-bottom: 0.5rem; color: #374151;">No Upcoming Assignments</h3>
+            <p>Great! You're all caught up with your assignments.</p>
+        </div>
     }
 </div>

@@ -3,41 +3,59 @@
     ViewBag.Title = "Send Message";
 }
 
-<h2>Send Message</h2>
+<div class="page-title">Send Message</div>
+<div class="page-subtitle">Compose a new message to lecturers or administrators</div>
 
-@using (Html.BeginForm("SendMessage", "Student", FormMethod.Post))
-{
-    @Html.AntiForgeryToken()
+<!-- Send Message Form -->
+<div class="table-container">
+    <div class="table-header">
+        <div class="table-title">Compose Message</div>
+    </div>
     
-    <div class="form-group">
-        <label>To</label>
-        <select name="receiverId" class="form-control" required>
-            <option value="">Select Recipient</option>
-            <optgroup label="Lecturers">
-                @foreach (var lecturer in ViewBag.Lecturers)
-                {
-                    <option value="@lecturer.UserId" @(ViewBag.ReceiverId == lecturer.UserId ? "selected" : "")>@lecturer.User.FullName - @lecturer.Department</option>
-                }
-            </optgroup>
-            <optgroup label="Administrators">
-                @foreach (var admin in ViewBag.Admins)
-                {
-                    <option value="@admin.UserId" @(ViewBag.ReceiverId == admin.UserId ? "selected" : "")>@admin.FullName (Admin)</option>
-                }
-            </optgroup>
-        </select>
-    </div>
+    <div style="padding: 2rem;">
+        @using (Html.BeginForm("SendMessage", "Student", FormMethod.Post))
+        {
+            @Html.AntiForgeryToken()
+            
+            <div class="form-group">
+                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: #1a202c;">To</label>
+                <select name="receiverId" required style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.95rem; background: white;">
+                    <option value="">Select Recipient</option>
+                    <optgroup label="Lecturers">
+                        @foreach (var lecturer in ViewBag.Lecturers)
+                        {
+                            <option value="@lecturer.UserId" @(ViewBag.ReceiverId == lecturer.UserId ? "selected" : "")>@lecturer.User.FullName - @lecturer.Department</option>
+                        }
+                    </optgroup>
+                    <optgroup label="Administrators">
+                        @foreach (var admin in ViewBag.Admins)
+                        {
+                            <option value="@admin.UserId" @(ViewBag.ReceiverId == admin.UserId ? "selected" : "")>@admin.FullName (Admin)</option>
+                        }
+                    </optgroup>
+                </select>
+            </div>
 
-    <div class="form-group">
-        <label>Subject</label>
-        <input type="text" name="subject" class="form-control" value="@ViewBag.Subject" required />
-    </div>
+            <div class="form-group">
+                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: #1a202c;">Subject</label>
+                <input type="text" name="subject" value="@ViewBag.Subject" required style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.95rem;" placeholder="Enter message subject..." />
+            </div>
 
-    <div class="form-group">
-        <label>Message</label>
-        <textarea name="body" class="form-control" rows="6" required></textarea>
-    </div>
+            <div class="form-group">
+                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: #1a202c;">Message</label>
+                <textarea name="body" rows="8" required style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.95rem; resize: vertical; min-height: 150px;" placeholder="Type your message here..."></textarea>
+            </div>
 
-    <button type="submit" class="btn btn-primary">Send</button>
-    <a href="@Url.Action("Messages", "Student")" class="btn btn-secondary">Cancel</a>
-}
+            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                <button type="submit" style="background: #4f46e5; color: white; padding: 0.75rem 1.5rem; border: none; border-radius: 8px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fas fa-paper-plane"></i>
+                    Send Message
+                </button>
+                <a href="@Url.Action("Messages", "Student")" style="background: #64748b; color: white; padding: 0.75rem 1.5rem; border-radius: 8px; text-decoration: none; font-weight: 500; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fas fa-arrow-left"></i>
+                    Cancel
+                </a>
+            </div>
+        }
+    </div>
+</div>

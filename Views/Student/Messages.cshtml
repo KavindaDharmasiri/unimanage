@@ -1,39 +1,124 @@
 @model List<uniManage.Models.Message>
-
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
     ViewBag.Title = "Messages";
 }
 
-<h2>Messages</h2>
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+    <div>
+        <div class="page-title">Messages</div>
+        <div class="page-subtitle">Communicate with lecturers and administrators</div>
+    </div>
+    <a href="@Url.Action("SendMessage", "Student")" style="background: #4f46e5; color: white; padding: 0.5rem 1rem; border-radius: 6px; text-decoration: none; font-weight: 500; display: flex; align-items: center; gap: 0.5rem;">
+        <i class="fas fa-plus"></i>
+        Send Message
+    </a>
+</div>
 
-<a href="@Url.Action("SendMessage", "Student")" class="btn btn-primary">Send New Message</a>
-
+<!-- Alerts -->
 @if (TempData["Success"] != null)
 {
-    <div class="alert alert-success">@TempData["Success"]</div>
+    <div class="alert alert-success">
+        <i class="fas fa-check-circle" style="margin-right: 0.5rem;"></i>
+        @TempData["Success"]
+    </div>
 }
 
-<table class="table">
-    <thead>
-        <tr>
-            <th>From</th>
-            <th>To</th>
-            <th>Subject</th>
-            <th>Date</th>
-            <th>Status</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var message in Model)
-        {
-            <tr class="@(message.IsRead ? "" : "unread")" style="cursor: pointer;" onclick="window.location='@Url.Action("ViewMessage", "Student", new { id = message.MessageId })'">
-                <td>@message.Sender.FullName</td>
-                <td>@message.Receiver.FullName</td>
-                <td>@message.Subject</td>
-                <td>@message.SentDate.ToString("yyyy-MM-dd HH:mm")</td>
-                <td>@(message.IsRead ? "Read" : "Unread")</td>
-            </tr>
-        }
-    </tbody>
-</table>
+<!-- Stats Grid -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon blue">
+            <i class="fas fa-envelope"></i>
+        </div>
+        <div class="stat-value">@Model.Count</div>
+        <div class="stat-label">Total Messages</div>
+        <div class="stat-change neutral">All conversations</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon green">
+            <i class="fas fa-envelope-open"></i>
+        </div>
+        <div class="stat-value">@Model.Count(m => m.IsRead)</div>
+        <div class="stat-label">Read Messages</div>
+        <div class="stat-change positive">Viewed messages</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon orange">
+            <i class="fas fa-envelope-open-text"></i>
+        </div>
+        <div class="stat-value">@Model.Count(m => !m.IsRead)</div>
+        <div class="stat-label">Unread Messages</div>
+        <div class="stat-change neutral">Need attention</div>
+    </div>
+</div>
+
+<!-- Messages Container -->
+<div class="table-container">
+    <div class="table-header">
+        <div class="table-title">All Messages</div>
+    </div>
+    
+    @if (Model.Any())
+    {
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Message Details</th>
+                    <th>From/To</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var message in Model.OrderByDescending(m => m.SentDate))
+                {
+                    <tr style="cursor: pointer;" onclick="window.location='@Url.Action("ViewMessage", "Student", new { id = message.MessageId })'">
+                        <td>
+                            <div class="user-info">
+                                <div class="user-avatar-table" style="background: @(message.IsRead ? "#64748b" : "#4f46e5");">
+                                    <i class="fas fa-@(message.IsRead ? "envelope-open" : "envelope")"></i>
+                                </div>
+                                <div class="user-details">
+                                    <h4 style="font-weight: @(message.IsRead ? "500" : "700");">@message.Subject</h4>
+                                    <p>Message</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="user-details">
+                                <h4>@message.Sender.FullName</h4>
+                                <p>to @message.Receiver.FullName</p>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="user-details">
+                                <h4>@message.SentDate.ToString("MMM dd, yyyy")</h4>
+                                <p>@message.SentDate.ToString("HH:mm")</p>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="status-badge @(message.IsRead ? "active" : "pending")">
+                                @(message.IsRead ? "Read" : "Unread")
+                            </span>
+                        </td>
+                        <td>
+                            <a href="@Url.Action("ViewMessage", "Student", new { id = message.MessageId })" class="btn-manage">View</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <div style="text-align: center; padding: 4rem; color: #64748b;">
+            <i class="fas fa-inbox" style="font-size: 4rem; margin-bottom: 1rem; color: #cbd5e1;"></i>
+            <h3 style="color: #374151; margin-bottom: 0.5rem;">No Messages</h3>
+            <p style="margin-bottom: 1.5rem;">You don't have any messages yet. Start a conversation with your lecturers or administrators.</p>
+            <a href="@Url.Action("SendMessage", "Student")" style="background: #4f46e5; color: white; padding: 0.5rem 1rem; border-radius: 6px; text-decoration: none; font-weight: 500;">Send Your First Message</a>
+        </div>
+    }
+</div>

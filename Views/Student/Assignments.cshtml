@@ -1,39 +1,149 @@
 @model List<uniManage.Models.Assignment>
-
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
     ViewBag.Title = "My Assignments";
 }
 
-<h2>My Assignments</h2>
+<div class="page-title">My Assignments</div>
+<div class="page-subtitle">Track and submit your course assignments</div>
 
+<!-- Alerts -->
 @if (TempData["Success"] != null)
 {
-    <div class="alert alert-success">@TempData["Success"]</div>
+    <div class="alert alert-success">
+        <i class="fas fa-check-circle" style="margin-right: 0.5rem;"></i>
+        @TempData["Success"]
+    </div>
 }
 
-<table class="table">
-    <thead>
-        <tr>
-            <th>Title</th>
-            <th>Course</th>
-            <th>Due Date</th>
-            <th>Max Marks</th>
-            <th>Action</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var assignment in Model)
-        {
-            <tr>
-                <td>@assignment.Title</td>
-                <td>@assignment.Course.CourseName</td>
-                <td>@assignment.DueDate.ToString("yyyy-MM-dd HH:mm")</td>
-                <td>@assignment.MaxMarks</td>
-                <td>
-                    <a href="@Url.Action("SubmitAssignment", "Student", new { id = assignment.AssignmentId })" class="btn btn-sm">Submit</a>
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
+<!-- Stats Grid -->
+<div class="stats-grid">
+    @{
+        var totalAssignments = Model.Count;
+        var overdueAssignments = Model.Count(a => a.DueDate < DateTime.Now);
+        var dueSoon = Model.Count(a => a.DueDate >= DateTime.Now && a.DueDate <= DateTime.Now.AddDays(3));
+        var upcoming = Model.Count(a => a.DueDate > DateTime.Now.AddDays(3));
+    }
+    
+    <div class="stat-card">
+        <div class="stat-icon blue">
+            <i class="fas fa-clipboard-list"></i>
+        </div>
+        <div class="stat-value">@totalAssignments</div>
+        <div class="stat-label">Total Assignments</div>
+        <div class="stat-change neutral">All assignments</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon red">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <div class="stat-value">@overdueAssignments</div>
+        <div class="stat-label">Overdue</div>
+        <div class="stat-change negative">Need attention</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon orange">
+            <i class="fas fa-clock"></i>
+        </div>
+        <div class="stat-value">@dueSoon</div>
+        <div class="stat-label">Due Soon</div>
+        <div class="stat-change neutral">Next 3 days</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon green">
+            <i class="fas fa-calendar-alt"></i>
+        </div>
+        <div class="stat-value">@upcoming</div>
+        <div class="stat-label">Upcoming</div>
+        <div class="stat-change positive">Future assignments</div>
+    </div>
+</div>
+
+<!-- Assignments Container -->
+<div class="table-container">
+    <div class="table-header">
+        <div class="table-title">All Assignments</div>
+    </div>
+    
+    @if (Model.Any())
+    {
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Assignment Details</th>
+                    <th>Course</th>
+                    <th>Due Date</th>
+                    <th>Priority</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var assignment in Model.OrderBy(a => a.DueDate))
+                {
+                    var daysUntilDue = (assignment.DueDate - DateTime.Now).Days;
+                    var isOverdue = assignment.DueDate < DateTime.Now;
+                    var priorityLevel = isOverdue ? "Overdue" : daysUntilDue <= 1 ? "High" : daysUntilDue <= 3 ? "Medium" : "Low";
+                    var priorityClass = isOverdue ? "status-badge" : daysUntilDue <= 1 ? "status-badge" : daysUntilDue <= 3 ? "status-badge pending" : "status-badge active";
+                    
+                    <tr>
+                        <td>
+                            <div class="user-info">
+                                <div class="user-avatar-table" style="background: @(isOverdue ? "#ef4444" : daysUntilDue <= 1 ? "#ef4444" : daysUntilDue <= 3 ? "#f59e0b" : "#10b981");">
+                                    <i class="fas fa-tasks"></i>
+                                </div>
+                                <div class="user-details">
+                                    <h4>@assignment.Title</h4>
+                                    <p>@assignment.MaxMarks Points</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="user-details">
+                                <h4>@assignment.Course.CourseName</h4>
+                                <p>@assignment.Course.CourseCode</p>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="user-details">
+                                <h4>@assignment.DueDate.ToString("MMM dd, yyyy")</h4>
+                                <p>
+                                    @assignment.DueDate.ToString("HH:mm")
+                                    @if (isOverdue)
+                                    {
+                                        <span style="color: #ef4444; font-weight: 500;">(Overdue)</span>
+                                    }
+                                    else if (daysUntilDue == 0)
+                                    {
+                                        <span style="color: #f59e0b; font-weight: 500;">(Due Today)</span>
+                                    }
+                                    else if (daysUntilDue > 0)
+                                    {
+                                        <span>(@daysUntilDue days left)</span>
+                                    }
+                                </p>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="@priorityClass">@priorityLevel Priority</span>
+                        </td>
+                        <td>
+                            <a href="@Url.Action("SubmitAssignment", "Student", new { id = assignment.AssignmentId })" class="btn-manage" style="color: @(isOverdue ? "#ef4444" : daysUntilDue <= 1 ? "#ef4444" : daysUntilDue <= 3 ? "#f59e0b" : "#10b981");">Submit</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <div style="text-align: center; padding: 4rem; color: #64748b;">
+            <i class="fas fa-clipboard-check" style="font-size: 4rem; margin-bottom: 1rem; color: #cbd5e1;"></i>
+            <h3 style="color: #374151; margin-bottom: 0.5rem;">No Assignments Found</h3>
+            <p style="margin-bottom: 1.5rem;">You don't have any assignments at the moment. Check back later or browse available courses.</p>
+            <a href="@Url.Action("BrowseCourses", "Student")" style="background: #4f46e5; color: white; padding: 0.5rem 1rem; border-radius: 6px; text-decoration: none; font-weight: 500;">Browse Courses</a>
+        </div>
+    }
+</div>

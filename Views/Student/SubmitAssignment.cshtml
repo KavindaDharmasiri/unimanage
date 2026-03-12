@@ -1,31 +1,78 @@
 @model uniManage.Models.Assignment
 @{
+    Layout = "~/Views/Shared/_Layout.cshtml";
     ViewBag.Title = "Submit Assignment";
 }
 
-<h2>Submit Assignment</h2>
+<div class="page-title">Submit Assignment</div>
+<div class="page-subtitle">Complete and submit your assignment</div>
 
-<div style="margin: 20px 0; padding: 15px; background-color: #f4f4f4; border-radius: 5px;">
-    <h3>@Model.Title</h3>
-    <p><strong>Description:</strong> @Model.Description</p>
-    <p><strong>Due Date:</strong> @Model.DueDate.ToString("yyyy-MM-dd HH:mm")</p>
-    <p><strong>Max Marks:</strong> @Model.MaxMarks</p>
+<!-- Assignment Information -->
+<div class="stat-card" style="margin-bottom: 2rem;">
+    <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
+        <div class="stat-icon orange">
+            <i class="fas fa-tasks"></i>
+        </div>
+        <div>
+            <h3 style="margin: 0; font-size: 1.25rem; font-weight: 600;">@Model.Title</h3>
+            <p style="margin: 0; color: #64748b;">Assignment Details</p>
+        </div>
+    </div>
+    
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+        <div>
+            <div style="color: #64748b; font-size: 0.875rem; margin-bottom: 0.25rem;">Description</div>
+            <div style="font-weight: 500;">@Model.Description</div>
+        </div>
+        <div>
+            <div style="color: #64748b; font-size: 0.875rem; margin-bottom: 0.25rem;">Due Date</div>
+            <div style="font-weight: 500;">@Model.DueDate.ToString("MMM dd, yyyy HH:mm")</div>
+        </div>
+        <div>
+            <div style="color: #64748b; font-size: 0.875rem; margin-bottom: 0.25rem;">Max Marks</div>
+            <div style="font-weight: 500;">@Model.MaxMarks Points</div>
+        </div>
+    </div>
+    
     @if (!string.IsNullOrEmpty(Model.FilePath))
     {
-        <p><strong>Assignment File:</strong> <a href="@Model.FilePath" class="btn btn-sm btn-primary" download>Download Assignment File</a></p>
+        <div style="padding: 1rem; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fas fa-paperclip" style="color: #64748b;"></i>
+                <span style="font-weight: 500;">Assignment File:</span>
+                <a href="@Model.FilePath" style="color: #4f46e5; text-decoration: none; font-weight: 500;" download>Download Assignment File</a>
+            </div>
+        </div>
     }
 </div>
 
-@using (Html.BeginForm("SubmitAssignment", "Student", FormMethod.Post))
-{
-    @Html.AntiForgeryToken()
-    @Html.Hidden("id", Model.AssignmentId)
-    
-    <div style="margin-bottom: 15px;">
-        <label>Your Submission:</label>
-        <textarea name="content" rows="10" required style="width: 100%; padding: 8px;"></textarea>
+<!-- Submission Form -->
+<div class="table-container">
+    <div class="table-header">
+        <div class="table-title">Your Submission</div>
     </div>
     
-    <button type="submit" style="padding: 10px 20px; background-color: #28a745; color: white; border: none; cursor: pointer; border-radius: 3px;">Submit Assignment</button>
-    @Html.ActionLink("Cancel", "Assignments", null, new { style = "padding: 10px 20px; background-color: #6c757d; color: white; text-decoration: none; border-radius: 3px; margin-left: 10px;" })
-}
+    <div style="padding: 2rem;">
+        @using (Html.BeginForm("SubmitAssignment", "Student", FormMethod.Post))
+        {
+            @Html.AntiForgeryToken()
+            @Html.Hidden("id", Model.AssignmentId)
+            
+            <div class="form-group">
+                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: #1a202c;">Your Submission Content</label>
+                <textarea name="content" rows="10" required style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.95rem; resize: vertical; min-height: 200px;" placeholder="Enter your assignment submission here..."></textarea>
+            </div>
+            
+            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                <button type="submit" style="background: #10b981; color: white; padding: 0.75rem 1.5rem; border: none; border-radius: 8px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fas fa-upload"></i>
+                    Submit Assignment
+                </button>
+                <a href="@Url.Action("Assignments", "Student")" style="background: #64748b; color: white; padding: 0.75rem 1.5rem; border-radius: 8px; text-decoration: none; font-weight: 500; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fas fa-arrow-left"></i>
+                    Cancel
+                </a>
+            </div>
+        }
+    </div>
+</div>

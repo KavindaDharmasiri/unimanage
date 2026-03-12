@@ -1,57 +1,155 @@
 @model List<uniManage.Models.Course>
-
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
     ViewBag.Title = "Browse Courses";
 }
 
-<h2>Available Courses</h2>
+<div class="page-title">Browse Courses</div>
+<div class="page-subtitle">Discover and enroll in available courses</div>
 
+<!-- Alerts -->
 @if (TempData["Success"] != null)
 {
-    <div class="alert alert-success">@TempData["Success"]</div>
+    <div class="alert alert-success">
+        <i class="fas fa-check-circle" style="margin-right: 0.5rem;"></i>
+        @TempData["Success"]
+    </div>
 }
 @if (TempData["Error"] != null)
 {
-    <div class="alert alert-error">@TempData["Error"]</div>
+    <div class="alert alert-error">
+        <i class="fas fa-exclamation-circle" style="margin-right: 0.5rem;"></i>
+        @TempData["Error"]
+    </div>
 }
 
-<table class="table">
-    <thead>
-        <tr>
-            <th>Code</th>
-            <th>Name</th>
-            <th>Credits</th>
-            <th>Lecturer</th>
-            <th>Enrolled/Max</th>
-            <th>Action</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var course in Model)
+<!-- Filters -->
+<div class="filters">
+    <div class="filter-search">
+        <i class="fas fa-search"></i>
+        <input type="text" id="searchInput" placeholder="Search courses by name or code..." onkeyup="filterCourses()">
+    </div>
+    <select class="filter-dropdown" id="lecturerFilter" onchange="filterCourses()">
+        <option value="">All Lecturers</option>
+        @foreach (var lecturer in Model.Where(c => c.Lecturer != null && c.Lecturer.User != null).Select(c => c.Lecturer.User.FullName).Distinct())
         {
-            <tr>
-                <td>@course.CourseCode</td>
-                <td>@course.CourseName</td>
-                <td>@course.Credits</td>
-                <td>@(course.Lecturer != null && course.Lecturer.User != null ? course.Lecturer.User.FullName : "Not Assigned")</td>
-                <td>@course.Enrollments.Count / @course.MaxEnrollment</td>
-                <td>
-                    @if (((List<int>)ViewBag.EnrolledCourseIds).Contains(course.CourseId))
-                    {
-                        <span class="badge badge-success">Enrolled</span>
-                    }
-                    else
-                    {
-                        using (Html.BeginForm("Enroll", "Student", FormMethod.Post))
-                        {
-                            @Html.AntiForgeryToken()
-                            <input type="hidden" name="courseId" value="@course.CourseId" />
-                            <button type="submit" class="btn btn-primary btn-sm">Enroll</button>
-                        }
-                    }
-                </td>
-            </tr>
+            <option value="@lecturer">@lecturer</option>
         }
-    </tbody>
-</table>
+    </select>
+    <select class="filter-dropdown" id="availabilityFilter" onchange="filterCourses()">
+        <option value="">All Courses</option>
+        <option value="available">Available</option>
+        <option value="full">Full</option>
+    </select>
+</div>
+
+<!-- Courses Grid -->
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 1.5rem;" id="coursesGrid">
+    @foreach (var course in Model)
+    {
+        var enrollmentPercentage = course.MaxEnrollment > 0 ? (course.Enrollments.Count * 100 / course.MaxEnrollment) : 0;
+        var isEnrolled = ((List<int>)ViewBag.EnrolledCourseIds).Contains(course.CourseId);
+        var isFull = course.Enrollments.Count >= course.MaxEnrollment;
+        var lecturerName = course.Lecturer != null && course.Lecturer.User != null ? course.Lecturer.User.FullName : "Not Assigned";
+        
+        <div class="stat-card" style="padding: 1.5rem;" data-course-name="@course.CourseName.ToLower()" data-course-code="@course.CourseCode.ToLower()" data-lecturer="@lecturerName.ToLower()" data-availability="@(isFull ? "full" : "available")">
+            <!-- Course Header -->
+            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                <div class="stat-icon blue">
+                    @course.CourseCode.Substring(0, Math.Min(3, course.CourseCode.Length))
+                </div>
+                <div style="flex: 1;">
+                    <h3 style="margin: 0; font-size: 1.125rem; font-weight: 600; color: #1a202c;">@course.CourseName</h3>
+                    <p style="margin: 0; color: #64748b; font-size: 0.875rem;">@course.CourseCode</p>
+                </div>
+                <div style="text-align: right;">
+                    <div class="status-badge active" style="font-size: 0.75rem;">
+                        @course.Credits Credits
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Course Details -->
+            <div style="margin-bottom: 1.5rem;">
+                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
+                    <i class="fas fa-chalkboard-teacher" style="color: #64748b; font-size: 0.875rem;"></i>
+                    <span style="color: #1a202c; font-weight: 500;">@lecturerName</span>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                    <span style="color: #64748b; font-size: 0.875rem;">Enrollment</span>
+                    <span style="color: #1a202c; font-weight: 500;">@course.Enrollments.Count / @course.MaxEnrollment</span>
+                </div>
+                
+                <div style="background: #f1f5f9; border-radius: 4px; height: 6px; overflow: hidden; margin-top: 0.5rem;">
+                    <div style="height: 100%; background: #4f46e5; width: @(enrollmentPercentage)%; transition: width 0.3s ease;"></div>
+                </div>
+            </div>
+            
+            <!-- Action Button -->
+            <div style="text-align: center;">
+                @if (isEnrolled)
+                {
+                    <button style="background: #64748b; color: white; padding: 0.5rem 1rem; border: none; border-radius: 6px; font-weight: 500; cursor: not-allowed;" disabled>
+                        <i class="fas fa-check"></i>
+                        Already Enrolled
+                    </button>
+                }
+                else if (isFull)
+                {
+                    <button style="background: #ef4444; color: white; padding: 0.5rem 1rem; border: none; border-radius: 6px; font-weight: 500;" disabled>
+                        <i class="fas fa-times"></i>
+                        Course Full
+                    </button>
+                }
+                else
+                {
+                    using (Html.BeginForm("Enroll", "Student", FormMethod.Post, new { style = "display: inline;" }))
+                    {
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="courseId" value="@course.CourseId" />
+                        <button type="submit" style="background: #10b981; color: white; padding: 0.5rem 1rem; border: none; border-radius: 6px; font-weight: 500; cursor: pointer;">
+                            <i class="fas fa-plus"></i>
+                            Enroll Now
+                        </button>
+                    }
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@if (!Model.Any())
+{
+    <div style="text-align: center; padding: 4rem 2rem; background: white; border-radius: 12px; border: 1px solid #e2e8f0;">
+        <i class="fas fa-book-open" style="font-size: 4rem; color: #cbd5e1; margin-bottom: 1rem;"></i>
+        <h3 style="color: #374151; margin-bottom: 0.5rem;">No Courses Available</h3>
+        <p style="color: #64748b;">There are currently no courses available for enrollment.</p>
+    </div>
+}
+
+<script>
+function filterCourses() {
+    const searchInput = document.getElementById('searchInput').value.toLowerCase();
+    const lecturerFilter = document.getElementById('lecturerFilter').value.toLowerCase();
+    const availabilityFilter = document.getElementById('availabilityFilter').value.toLowerCase();
+    const courseCards = document.querySelectorAll('[data-course-name]');
+    
+    courseCards.forEach(card => {
+        const courseName = card.dataset.courseName;
+        const courseCode = card.dataset.courseCode;
+        const lecturer = card.dataset.lecturer;
+        const availability = card.dataset.availability;
+        
+        const matchesSearch = courseName.includes(searchInput) || courseCode.includes(searchInput);
+        const matchesLecturer = lecturerFilter === '' || lecturer.includes(lecturerFilter);
+        const matchesAvailability = availabilityFilter === '' || availability === availabilityFilter;
+        
+        if (matchesSearch && matchesLecturer && matchesAvailability) {
+            card.style.display = 'block';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+}
+</script>
