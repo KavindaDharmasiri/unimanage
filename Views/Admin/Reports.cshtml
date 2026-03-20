@@ -13,7 +13,7 @@
         <div class="stat-icon blue">
             <i class="fas fa-chart-bar"></i>
         </div>
-        <div class="stat-value">3</div>
+        <div class="stat-value">9</div>
         <div class="stat-label">AVAILABLE REPORTS</div>
     </div>
     <div class="stat-card">
@@ -93,6 +93,126 @@
         <p style="color: #64748b; margin-bottom: 1.5rem; line-height: 1.5;">Monitor lecturer workload distribution including course assignments, student counts per lecturer, and departmental teaching loads.</p>
         <div style="display: flex; gap: 1rem;">
             <a href="@Url.Action("LecturerWorkloadReport", "Admin")" style="background: #f59e0b; color: white; padding: 0.75rem 1.5rem; border-radius: 8px; text-decoration: none; font-weight: 500; display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fas fa-eye"></i>
+                View Report
+            </a>
+        </div>
+    </div>
+
+    <!-- Detailed Enrollment Report -->
+    <div style="background: white; border-radius: 12px; padding: 2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-left: 4px solid #8b5cf6;">
+        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
+            <div style="width: 50px; height: 50px; background: #8b5cf6; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white;">
+                <i class="fas fa-list" style="font-size: 1.25rem;"></i>
+            </div>
+            <div>
+                <h3 style="font-size: 1.25rem; font-weight: 700; margin: 0; color: #1a202c;">Detailed Enrollment Report</h3>
+                <p style="color: #64748b; margin: 0; font-size: 0.875rem;">Student Registration Data</p>
+            </div>
+        </div>
+        <p style="color: #64748b; margin-bottom: 1.5rem; line-height: 1.5;">Comprehensive enrollment data with student details, course information, enrollment dates, and enrollment status tracking.</p>
+        <div style="display: flex; gap: 1rem;">
+            <a href="@Url.Action("DetailedEnrollmentReport", "Admin")" style="background: #8b5cf6; color: white; padding: 0.75rem 1.5rem; border-radius: 8px; text-decoration: none; font-weight: 500; display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fas fa-eye"></i>
+                View Report
+            </a>
+        </div>
+    </div>
+
+    <!-- Detailed Student Performance Report -->
+    <div style="background: white; border-radius: 12px; padding: 2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-left: 4px solid #06b6d4;">
+        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
+            <div style="width: 50px; height: 50px; background: #06b6d4; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white;">
+                <i class="fas fa-chart-bar" style="font-size: 1.25rem;"></i>
+            </div>
+            <div>
+                <h3 style="font-size: 1.25rem; font-weight: 700; margin: 0; color: #1a202c;">Detailed Student Performance</h3>
+                <p style="color: #64748b; margin: 0; font-size: 0.875rem;">Academic Progress Analysis</p>
+            </div>
+        </div>
+        <p style="color: #64748b; margin-bottom: 1.5rem; line-height: 1.5;">In-depth student performance metrics including grades, submissions, completed courses, and academic progress indicators.</p>
+        <div style="display: flex; gap: 1rem;">
+            <a href="@Url.Action("DetailedStudentPerformanceReport", "Admin")" style="background: #06b6d4; color: white; padding: 0.75rem 1.5rem; border-radius: 8px; text-decoration: none; font-weight: 500; display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fas fa-eye"></i>
+                View Report
+            </a>
+        </div>
+    </div>
+
+    <!-- Detailed Course Analysis Report -->
+    <div style="background: white; border-radius: 12px; padding: 2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-left: 4px solid #ec4899;">
+        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
+            <div style="width: 50px; height: 50px; background: #ec4899; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white;">
+                <i class="fas fa-book-open" style="font-size: 1.25rem;"></i>
+            </div>
+            <div>
+                <h3 style="font-size: 1.25rem; font-weight: 700; margin: 0; color: #1a202c;">Detailed Course Analysis</h3>
+                <p style="color: #64748b; margin: 0; font-size: 0.875rem;">Course Performance Metrics</p>
+            </div>
+        </div>
+        <p style="color: #64748b; margin-bottom: 1.5rem; line-height: 1.5;">Comprehensive course analysis with capacity utilization, enrollment trends, assignment statistics, and grade distribution.</p>
+        <div style="display: flex; gap: 1rem;">
+            <a href="@Url.Action("DetailedCourseAnalysisReport", "Admin")" style="background: #ec4899; color: white; padding: 0.75rem 1.5rem; border-radius: 8px; text-decoration: none; font-weight: 500; display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fas fa-eye"></i>
+                View Report
+            </a>
+        </div>
+    </div>
+
+    <!-- Detailed Assignment Report -->
+    <div style="background: white; border-radius: 12px; padding: 2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-left: 4px solid #f97316;">
+        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
+            <div style="width: 50px; height: 50px; background: #f97316; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white;">
+                <i class="fas fa-tasks" style="font-size: 1.25rem;"></i>
+            </div>
+            <div>
+                <h3 style="font-size: 1.25rem; font-weight: 700; margin: 0; color: #1a202c;">Detailed Assignment Report</h3>
+                <p style="color: #64748b; margin: 0; font-size: 0.875rem;">Submission & Grading Data</p>
+            </div>
+        </div>
+        <p style="color: #64748b; margin-bottom: 1.5rem; line-height: 1.5;">Assignment submission tracking with completion rates, grading statistics, and student submission patterns.</p>
+        <div style="display: flex; gap: 1rem;">
+            <a href="@Url.Action("DetailedAssignmentReport", "Admin")" style="background: #f97316; color: white; padding: 0.75rem 1.5rem; border-radius: 8px; text-decoration: none; font-weight: 500; display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fas fa-eye"></i>
+                View Report
+            </a>
+        </div>
+    </div>
+
+    <!-- Detailed Department Report -->
+    <div style="background: white; border-radius: 12px; padding: 2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-left: 4px solid #14b8a6;">
+        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
+            <div style="width: 50px; height: 50px; background: #14b8a6; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white;">
+                <i class="fas fa-building" style="font-size: 1.25rem;"></i>
+            </div>
+            <div>
+                <h3 style="font-size: 1.25rem; font-weight: 700; margin: 0; color: #1a202c;">Detailed Department Report</h3>
+                <p style="color: #64748b; margin: 0; font-size: 0.875rem;">Departmental Statistics</p>
+            </div>
+        </div>
+        <p style="color: #64748b; margin-bottom: 1.5rem; line-height: 1.5;">Department-level analysis including lecturer distribution, student enrollment, course offerings, and resource allocation.</p>
+        <div style="display: flex; gap: 1rem;">
+            <a href="@Url.Action("DetailedDepartmentReport", "Admin")" style="background: #14b8a6; color: white; padding: 0.75rem 1.5rem; border-radius: 8px; text-decoration: none; font-weight: 500; display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fas fa-eye"></i>
+                View Report
+            </a>
+        </div>
+    </div>
+
+    <!-- Detailed User Activity Report -->
+    <div style="background: white; border-radius: 12px; padding: 2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-left: 4px solid #6366f1;">
+        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
+            <div style="width: 50px; height: 50px; background: #6366f1; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white;">
+                <i class="fas fa-user-clock" style="font-size: 1.25rem;"></i>
+            </div>
+            <div>
+                <h3 style="font-size: 1.25rem; font-weight: 700; margin: 0; color: #1a202c;">Detailed User Activity Report</h3>
+                <p style="color: #64748b; margin: 0; font-size: 0.875rem;">System Engagement Metrics</p>
+            </div>
+        </div>
+        <p style="color: #64748b; margin-bottom: 1.5rem; line-height: 1.5;">User engagement tracking with activity logs, messaging statistics, and system usage patterns across all user roles.</p>
+        <div style="display: flex; gap: 1rem;">
+            <a href="@Url.Action("DetailedUserActivityReport", "Admin")" style="background: #6366f1; color: white; padding: 0.75rem 1.5rem; border-radius: 8px; text-decoration: none; font-weight: 500; display: flex; align-items: center; gap: 0.5rem;">
                 <i class="fas fa-eye"></i>
                 View Report
             </a>

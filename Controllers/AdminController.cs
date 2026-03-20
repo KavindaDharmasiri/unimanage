@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web.Mvc;
 using uniManage.Models;
+using iTextSharp.text;
+using iTextSharp.text.pdf;
 
 namespace uniManage.Controllers
 {
@@ -201,6 +203,8 @@ namespace uniManage.Controllers
 
         public ActionResult ExportCoursePDF()
         {
+            if (Session["UserId"] == null) return RedirectToAction("Login", "Account");
+
             var report = db.Courses
                 .Select(c => new CourseReportViewModel
                 {
@@ -211,7 +215,25 @@ namespace uniManage.Controllers
                 .OrderByDescending(c => c.EnrollmentCount)
                 .ToList();
 
-            return File(System.Text.Encoding.UTF8.GetBytes("PDF Export - Install iTextSharp package"), "text/plain", "report.txt");
+            // Generate CSV (more reliable than PDF without all dependencies)
+            var csv = "Course Code,Course Name,Total Enrollments\n";
+            foreach (var item in report)
+            {
+                csv += string.Format("\"{0}\",\"{1}\",{2}\n", 
+                    item.CourseCode, 
+                    item.CourseName, 
+                    item.EnrollmentCount);
+            }
+
+            byte[] fileBytes = System.Text.Encoding.UTF8.GetBytes(csv);
+            
+            // Set response headers
+            Response.ContentType = "text/csv";
+            Response.AddHeader("Content-Disposition", "attachment; filename=CourseReport_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".csv");
+            Response.BinaryWrite(fileBytes);
+            Response.End();
+            
+            return new EmptyResult();
         }
 
         public ActionResult ExportCourseExcel()
@@ -269,6 +291,321 @@ namespace uniManage.Controllers
                 .ToList();
 
             return View(report);
+        }
+
+        // DETAILED REPORTS SECTION
+
+        public ActionResult DetailedEnrollmentReport()
+        {
+            if (Session["UserId"] == null || Session["UserRole"].ToString() != "Administrator")
+                return RedirectToAction("Login", "Account");
+
+            var report = db.Enrollments
+                .Include("Student.User")
+                .Include("Course")
+                .Select(e => new DetailedEnrollmentReportViewModel
+                {
+                    StudentName = e.Student.User.FullName,
+                    StudentNumber = e.Student.StudentNumber,
+                    CourseName = e.Course.CourseName,
+                    CourseCode = e.Course.CourseCode,
+                    EnrollmentDate = e.EnrollmentDate,
+                    Status = e.Status,
+                    Credits = e.Course.Credits
+                })
+                .OrderByDescending(e => e.EnrollmentDate)
+                .ToList();
+
+            ViewBag.TotalEnrollments = report.Count;
+            ViewBag.ActiveEnrollments = report.Count(e => e.Status == "Active");
+            ViewBag.CompletedEnrollments = report.Count(e => e.Status == "Completed");
+            ViewBag.DroppedEnrollments = report.Count(e => e.Status == "Dropped");
+
+            return View(report);
+        }
+
+        public ActionResult DetailedStudentPerformanceReport()
+        {
+            if (Session["UserId"] == null || Session["UserRole"].ToString() != "Administrator")
+                return RedirectToAction("Login", "Account");
+
+            var report = db.Students
+                .Include("User")
+                .Include("Submissions")
+                .Select(s => new DetailedStudentPerformanceReportViewModel
+                {
+                    StudentName = s.User.FullName,
+                    StudentNumber = s.StudentNumber,
+                    TotalSubmissions = s.Submissions.Count,
+                    GradedSubmissions = s.Submissions.Count(sub => sub.Grade.HasValue),
+                    PendingSubmissions = s.Submissions.Count(sub => !sub.Grade.HasValue),
+                    AverageGrade = s.Submissions.Where(sub => sub.Grade.HasValue).Average(sub => (double?)sub.Grade) ?? 0,
+                    EnrolledCourses = s.Enrollments.Count,
+                    CompletedCourses = s.Enrollments.Count(e => e.Status == "Completed")
+                })
+                .OrderByDescending(s => s.AverageGrade)
+                .ToList();
+
+            ViewBag.TotalStudents = report.Count;
+            ViewBag.AveragePerformance = report.Average(s => s.AverageGrade);
+            ViewBag.TopPerformer = report.FirstOrDefault()?.StudentName ?? "N/A";
+
+            return View(report);
+        }
+
+        public ActionResult DetailedCourseAnalysisReport()
+        {
+            if (Session["UserId"] == null || Session["UserRole"].ToString() != "Administrator")
+                return RedirectToAction("Login", "Account");
+
+            var report = db.Courses
+                .Include("Lecturer.User")
+                .Include("Enrollments")
+                .Include("Assignments")
+                .Select(c => new DetailedCourseAnalysisReportViewModel
+                {
+                    CourseCode = c.CourseCode,
+                    CourseName = c.CourseName,
+                    LecturerName = c.Lecturer != null ? c.Lecturer.User.FullName : "Unassigned",
+                    MaxEnrollment = c.MaxEnrollment,
+                    CurrentEnrollment = c.Enrollments.Count,
+                    TotalAssignments = c.Assignments.Count,
+                    AverageGrade = c.Enrollments.Any() ? 
+                        c.Enrollments.SelectMany(e => e.Student.Submissions)
+                            .Where(s => s.Assignment.CourseId == c.CourseId && s.Grade.HasValue)
+                            .Average(s => (double?)s.Grade) ?? 0 : 0
+                })
+                .OrderByDescending(c => c.CurrentEnrollment)
+                .ToList();
+
+            ViewBag.TotalCourses = report.Count;
+            ViewBag.TotalEnrollments = report.Sum(c => c.CurrentEnrollment);
+            ViewBag.AverageCapacityUsage = report.Average(c => (double)c.CurrentEnrollment / c.MaxEnrollment * 100).ToString("F1") + "%";
+            ViewBag.AverageGrade = report.Average(c => c.AverageGrade).ToString("F2");
+
+            return View(report);
+        }
+
+        public ActionResult DetailedAssignmentReport()
+        {
+            if (Session["UserId"] == null || Session["UserRole"].ToString() != "Administrator")
+                return RedirectToAction("Login", "Account");
+
+            var report = db.Assignments
+                .Include("Course")
+                .Include("Submissions")
+                .Select(a => new DetailedAssignmentReportViewModel
+                {
+                    AssignmentTitle = a.Title,
+                    CourseName = a.Course.CourseName,
+                    DueDate = a.DueDate,
+                    TotalSubmissions = a.Submissions.Count,
+                    GradedSubmissions = a.Submissions.Count(s => s.Grade.HasValue),
+                    PendingSubmissions = a.Submissions.Count(s => !s.Grade.HasValue),
+                    AverageGrade = a.Submissions.Where(s => s.Grade.HasValue).Average(s => (double?)s.Grade) ?? 0
+                })
+                .OrderByDescending(a => a.DueDate)
+                .ToList();
+
+            ViewBag.TotalAssignments = report.Count;
+            ViewBag.TotalSubmissions = report.Sum(a => a.TotalSubmissions);
+            ViewBag.SubmissionRate = report.Count > 0 ? ((double)report.Sum(a => a.GradedSubmissions) / report.Sum(a => a.TotalSubmissions) * 100).ToString("F1") + "%" : "0%";
+            ViewBag.AverageGrade = report.Average(a => a.AverageGrade).ToString("F2");
+
+            return View(report);
+        }
+
+        public ActionResult DetailedDepartmentReport()
+        {
+            if (Session["UserId"] == null || Session["UserRole"].ToString() != "Administrator")
+                return RedirectToAction("Login", "Account");
+
+            // Get all departments
+            var departments = db.Departments.ToList();
+            
+            // Get all lecturers with their courses
+            var lecturersWithCourses = db.Lecturers.Include("Courses.Enrollments").ToList();
+
+            var report = departments
+                .Select(d => new DetailedDepartmentReportViewModel
+                {
+                    DepartmentName = d.DepartmentName,
+                    Status = d.Status,
+                    TotalLecturers = lecturersWithCourses.Count(l => l.Department == d.DepartmentName),
+                    TotalCourses = lecturersWithCourses.Where(l => l.Department == d.DepartmentName).SelectMany(l => l.Courses).Count(),
+                    TotalStudents = lecturersWithCourses.Where(l => l.Department == d.DepartmentName).SelectMany(l => l.Courses).SelectMany(c => c.Enrollments).Count(),
+                    AverageCoursesPerLecturer = lecturersWithCourses.Count(l => l.Department == d.DepartmentName) > 0 ? 
+                        (double)lecturersWithCourses.Where(l => l.Department == d.DepartmentName).SelectMany(l => l.Courses).Count() / lecturersWithCourses.Count(l => l.Department == d.DepartmentName) : 0
+                })
+                .OrderByDescending(d => d.TotalCourses)
+                .ToList();
+
+            ViewBag.TotalDepartments = report.Count;
+            ViewBag.TotalLecturers = report.Sum(d => d.TotalLecturers);
+            ViewBag.TotalCourses = report.Sum(d => d.TotalCourses);
+            ViewBag.TotalStudents = report.Sum(d => d.TotalStudents);
+
+            return View(report);
+        }
+
+        public ActionResult DetailedUserActivityReport()
+        {
+            if (Session["UserId"] == null || Session["UserRole"].ToString() != "Administrator")
+                return RedirectToAction("Login", "Account");
+
+            var report = db.Users
+                .ToList()
+                .Select(u => new DetailedUserActivityReportViewModel
+                {
+                    FullName = u.FullName,
+                    Email = u.Email,
+                    Role = u.Role,
+                    DaysSinceCreation = (int)(DateTime.Now - u.CreatedDate).TotalDays,
+                    SentMessages = u.SentMessages.Count,
+                    ReceivedMessages = u.ReceivedMessages.Count,
+                    TotalMessages = u.SentMessages.Count + u.ReceivedMessages.Count
+                })
+                .OrderByDescending(u => u.TotalMessages)
+                .ToList();
+
+            ViewBag.TotalUsers = report.Count;
+            ViewBag.StudentCount = report.Count(u => u.Role == "Student");
+            ViewBag.LecturerCount = report.Count(u => u.Role == "Lecturer");
+            ViewBag.AdminCount = report.Count(u => u.Role == "Administrator");
+            ViewBag.TotalMessages = report.Sum(u => u.TotalMessages);
+            ViewBag.ActiveUsers = report.Count(u => u.DaysSinceCreation <= 30);
+            ViewBag.EngagementRate = report.Count > 0 ? ((double)report.Count(u => u.TotalMessages > 0) / report.Count * 100).ToString("F1") + "%" : "0%";
+
+            return View(report);
+        }
+
+        // EXPORT DETAILED REPORTS AS CSV
+
+        public ActionResult ExportDetailedEnrollmentReportCSV()
+        {
+            if (Session["UserId"] == null) return RedirectToAction("Login", "Account");
+
+            var report = db.Enrollments
+                .Include("Student.User")
+                .Include("Course")
+                .Select(e => new
+                {
+                    StudentName = e.Student.User.FullName,
+                    StudentNumber = e.Student.StudentNumber,
+                    CourseName = e.Course.CourseName,
+                    CourseCode = e.Course.CourseCode,
+                    EnrollmentDate = e.EnrollmentDate,
+                    Status = e.Status,
+                    Credits = e.Course.Credits
+                })
+                .OrderByDescending(e => e.EnrollmentDate)
+                .ToList();
+
+            var csv = "Student Name,Student Number,Course Name,Course Code,Enrollment Date,Status,Credits\n";
+            foreach (var item in report)
+            {
+                csv += string.Format("\"{0}\",\"{1}\",\"{2}\",\"{3}\",{4},\"{5}\",{6}\n",
+                    item.StudentName,
+                    item.StudentNumber,
+                    item.CourseName,
+                    item.CourseCode,
+                    item.EnrollmentDate.ToString("yyyy-MM-dd"),
+                    item.Status,
+                    item.Credits);
+            }
+
+            byte[] fileBytes = System.Text.Encoding.UTF8.GetBytes(csv);
+            return File(fileBytes, "text/csv", "DetailedEnrollmentReport_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".csv");
+        }
+
+        public ActionResult ExportDetailedStudentPerformanceReportCSV()
+        {
+            if (Session["UserId"] == null) return RedirectToAction("Login", "Account");
+
+            var report = db.Students
+                .Include("User")
+                .Include("Submissions")
+                .Select(s => new
+                {
+                    StudentName = s.User.FullName,
+                    StudentNumber = s.StudentNumber,
+                    Email = s.User.Email,
+                    TotalSubmissions = s.Submissions.Count,
+                    GradedSubmissions = s.Submissions.Count(sub => sub.Grade.HasValue),
+                    PendingSubmissions = s.Submissions.Count(sub => !sub.Grade.HasValue),
+                    AverageGrade = s.Submissions.Where(sub => sub.Grade.HasValue).Average(sub => (double?)sub.Grade) ?? 0,
+                    EnrolledCourses = s.Enrollments.Count,
+                    CompletedCourses = s.Enrollments.Count(e => e.Status == "Completed")
+                })
+                .OrderByDescending(s => s.AverageGrade)
+                .ToList();
+
+            var csv = "Student Name,Student Number,Email,Total Submissions,Graded,Pending,Average Grade,Enrolled Courses,Completed Courses\n";
+            foreach (var item in report)
+            {
+                csv += string.Format("\"{0}\",\"{1}\",\"{2}\",{3},{4},{5},{6:F2},{7},{8}\n",
+                    item.StudentName,
+                    item.StudentNumber,
+                    item.Email,
+                    item.TotalSubmissions,
+                    item.GradedSubmissions,
+                    item.PendingSubmissions,
+                    item.AverageGrade,
+                    item.EnrolledCourses,
+                    item.CompletedCourses);
+            }
+
+            byte[] fileBytes = System.Text.Encoding.UTF8.GetBytes(csv);
+            return File(fileBytes, "text/csv", "DetailedStudentPerformanceReport_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".csv");
+        }
+
+        public ActionResult ExportDetailedCourseAnalysisReportCSV()
+        {
+            if (Session["UserId"] == null) return RedirectToAction("Login", "Account");
+
+            var report = db.Courses
+                .Include("Lecturer.User")
+                .Include("Enrollments")
+                .Include("Assignments")
+                .Select(c => new
+                {
+                    CourseCode = c.CourseCode,
+                    CourseName = c.CourseName,
+                    Department = c.Department,
+                    LecturerName = c.Lecturer != null ? c.Lecturer.User.FullName : "Unassigned",
+                    Credits = c.Credits,
+                    MaxEnrollment = c.MaxEnrollment,
+                    CurrentEnrollment = c.Enrollments.Count,
+                    AvailableSeats = c.MaxEnrollment - c.Enrollments.Count,
+                    EnrollmentPercentage = (c.Enrollments.Count * 100) / c.MaxEnrollment,
+                    TotalAssignments = c.Assignments.Count,
+                    AverageGrade = c.Enrollments.Any() ? 
+                        c.Enrollments.SelectMany(e => e.Student.Submissions)
+                            .Where(s => s.Assignment.CourseId == c.CourseId && s.Grade.HasValue)
+                            .Average(s => (double?)s.Grade) ?? 0 : 0
+                })
+                .OrderByDescending(c => c.CurrentEnrollment)
+                .ToList();
+
+            var csv = "Course Code,Course Name,Department,Lecturer,Credits,Max Enrollment,Current Enrollment,Available Seats,Enrollment %,Total Assignments,Average Grade\n";
+            foreach (var item in report)
+            {
+                csv += string.Format("\"{0}\",\"{1}\",\"{2}\",\"{3}\",{4},{5},{6},{7},{8}%,{9},{10:F2}\n",
+                    item.CourseCode,
+                    item.CourseName,
+                    item.Department,
+                    item.LecturerName,
+                    item.Credits,
+                    item.MaxEnrollment,
+                    item.CurrentEnrollment,
+                    item.AvailableSeats,
+                    item.EnrollmentPercentage,
+                    item.TotalAssignments,
+                    item.AverageGrade);
+            }
+
+            byte[] fileBytes = System.Text.Encoding.UTF8.GetBytes(csv);
+            return File(fileBytes, "text/csv", "DetailedCourseAnalysisReport_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".csv");
         }
 
         public ActionResult Students()

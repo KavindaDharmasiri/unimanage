@@ -1,0 +1,169 @@
+@{
+    ViewBag.Title = "Detailed Department Report";
+    ViewBag.CurrentPage = "Reports";
+    Layout = "~/Views/Admin/_AdminLayout.cshtml";
+}
+
+<h1 class="page-title">Detailed Department Report</h1>
+<p class="page-subtitle">Comprehensive departmental statistics and resource allocation analysis</p>
+
+<!-- Summary Stats -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon blue">
+            <i class="fas fa-building"></i>
+        </div>
+        <div class="stat-value">@ViewBag.TotalDepartments</div>
+        <div class="stat-label">DEPARTMENTS</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon green">
+            <i class="fas fa-chalkboard-teacher"></i>
+        </div>
+        <div class="stat-value">@ViewBag.TotalLecturers</div>
+        <div class="stat-label">LECTURERS</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon orange">
+            <i class="fas fa-user-graduate"></i>
+        </div>
+        <div class="stat-value">@ViewBag.TotalStudents</div>
+        <div class="stat-label">STUDENTS</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon purple">
+            <i class="fas fa-book"></i>
+        </div>
+        <div class="stat-value">@ViewBag.TotalCourses</div>
+        <div class="stat-label">COURSES</div>
+    </div>
+</div>
+
+<!-- Export Options -->
+<div style="background: white; border-radius: 12px; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-top: 2rem; margin-bottom: 2rem;">
+    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+        <button onclick="exportDepartmentReport()" style="background: #10b981; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
+            <i class="fas fa-download"></i>
+            Export as CSV
+        </button>
+        <button onclick="window.print()" style="background: #6366f1; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
+            <i class="fas fa-print"></i>
+            Print Report
+        </button>
+    </div>
+</div>
+
+<!-- Detailed Table -->
+<div style="background: white; border-radius: 12px; padding: 2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow-x: auto;">
+    <table style="width: 100%; border-collapse: collapse;">
+        <thead>
+            <tr style="background: #f8fafc; border-bottom: 2px solid #e2e8f0;">
+                <th style="padding: 1rem; text-align: left; font-weight: 600; color: #1a202c;">Department Name</th>
+                <th style="padding: 1rem; text-align: center; font-weight: 600; color: #1a202c;">Lecturers</th>
+                <th style="padding: 1rem; text-align: center; font-weight: 600; color: #1a202c;">Students</th>
+                <th style="padding: 1rem; text-align: center; font-weight: 600; color: #1a202c;">Courses</th>
+                <th style="padding: 1rem; text-align: center; font-weight: 600; color: #1a202c;">Avg Courses/Lecturer</th>
+                <th style="padding: 1rem; text-align: center; font-weight: 600; color: #1a202c;">Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr style="border-bottom: 1px solid #e2e8f0;">
+                    <td style="padding: 1rem; color: #475569; font-weight: 500;">@item.DepartmentName</td>
+                    <td style="padding: 1rem; text-align: center; color: #475569;">@item.TotalLecturers</td>
+                    <td style="padding: 1rem; text-align: center; color: #475569;">@item.TotalStudents</td>
+                    <td style="padding: 1rem; text-align: center; color: #475569;">@item.TotalCourses</td>
+                    <td style="padding: 1rem; text-align: center; color: #475569;">@item.AverageCoursesPerLecturer.ToString("F1")</td>
+                    <td style="padding: 1rem; text-align: center;">
+                        <span style="background: #10b981; color: white; padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.875rem; font-weight: 500;">@item.Status</span>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<script>
+function exportDepartmentReport() {
+    alert('Export feature coming soon');
+}
+</script>
+
+<style>
+    tr:hover {
+        background: #f8fafc;
+    }
+
+    @@media print {
+        body {
+            margin: 0;
+            padding: 0;
+        }
+        
+        .page-title, .page-subtitle {
+            page-break-after: avoid;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+            page-break-after: avoid;
+        }
+        
+        .stat-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .stat-icon {
+            display: none;
+        }
+        
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1a202c;
+        }
+        
+        .stat-label {
+            font-size: 0.75rem;
+            color: #64748b;
+            margin-top: 0.5rem;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            page-break-inside: avoid;
+        }
+        
+        th {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            padding: 0.75rem;
+            text-align: left;
+            font-weight: 600;
+            color: #1a202c;
+        }
+        
+        td {
+            border: 1px solid #e2e8f0;
+            padding: 0.75rem;
+            color: #475569;
+        }
+        
+        tr:hover {
+            background: white;
+        }
+        
+        button, a {
+            display: none;
+        }
+    }
+</style>

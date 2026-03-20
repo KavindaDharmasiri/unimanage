@@ -1,0 +1,7 @@
+Error: Could not load file or assembly 'BouncyCastle.Crypto, Version=1.8.9.0, Culture=neutral, PublicKeyToken=0e99375e54769942' or one of its dependencies. The system cannot find the file specified.
+
+Stack Trace:    at iTextSharp.text.pdf.security.DigestAlgorithms.Digest(String algo, Byte[] b)
+   at iTextSharp.text.pdf.PdfEncryption.CreateDocumentId()
+   at iTextSharp.text.pdf.PdfWriter.Close()
+   at iTextSharp.text.Document.Close()
+   at uniManage.Controllers.AdminController.ExportCoursePDF() in C:\Users\kavinda_d\Documents\e soft\a d cw\cw 2\project\uniManage\Controllers\AdminController.cs:line 256

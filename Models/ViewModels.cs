@@ -124,3 +124,69 @@ namespace uniManage.Models
         public string Department { get; set; }
     }
 }
+
+    public class DetailedEnrollmentReportViewModel
+    {
+        public string StudentName { get; set; }
+        public string StudentNumber { get; set; }
+        public string CourseName { get; set; }
+        public string CourseCode { get; set; }
+        public DateTime EnrollmentDate { get; set; }
+        public string Status { get; set; }
+        public int Credits { get; set; }
+    }
+
+    public class DetailedStudentPerformanceReportViewModel
+    {
+        public string StudentName { get; set; }
+        public string StudentNumber { get; set; }
+        public int TotalSubmissions { get; set; }
+        public int GradedSubmissions { get; set; }
+        public int PendingSubmissions { get; set; }
+        public double AverageGrade { get; set; }
+        public int EnrolledCourses { get; set; }
+        public int CompletedCourses { get; set; }
+    }
+
+    public class DetailedCourseAnalysisReportViewModel
+    {
+        public string CourseCode { get; set; }
+        public string CourseName { get; set; }
+        public string LecturerName { get; set; }
+        public int MaxEnrollment { get; set; }
+        public int CurrentEnrollment { get; set; }
+        public int TotalAssignments { get; set; }
+        public double AverageGrade { get; set; }
+    }
+
+    public class DetailedAssignmentReportViewModel
+    {
+        public string AssignmentTitle { get; set; }
+        public string CourseName { get; set; }
+        public DateTime DueDate { get; set; }
+        public int TotalSubmissions { get; set; }
+        public int GradedSubmissions { get; set; }
+        public int PendingSubmissions { get; set; }
+        public double AverageGrade { get; set; }
+    }
+
+    public class DetailedDepartmentReportViewModel
+    {
+        public string DepartmentName { get; set; }
+        public string Status { get; set; }
+        public int TotalLecturers { get; set; }
+        public int TotalStudents { get; set; }
+        public int TotalCourses { get; set; }
+        public double AverageCoursesPerLecturer { get; set; }
+    }
+
+    public class DetailedUserActivityReportViewModel
+    {
+        public string FullName { get; set; }
+        public string Email { get; set; }
+        public string Role { get; set; }
+        public int SentMessages { get; set; }
+        public int ReceivedMessages { get; set; }
+        public int TotalMessages { get; set; }
+        public int DaysSinceCreation { get; set; }
+    }
