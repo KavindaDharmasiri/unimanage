@@ -7,7 +7,8 @@ namespace uniManage.Models
     public class LoginViewModel
     {
         [Required]
-        [EmailAddress]
+        [EmailAddress(ErrorMessage = "Please enter a valid email address")]
+        [RegularExpression(@"^[^@\s]+@[^@\s]+\.[^@\s]+$", ErrorMessage = "Email must be in format: name@domain.com")]
         public string Email { get; set; }
 
         [Required]
@@ -21,7 +22,8 @@ namespace uniManage.Models
         public string FullName { get; set; }
 
         [Required]
-        [EmailAddress]
+        [EmailAddress(ErrorMessage = "Please enter a valid email address")]
+        [RegularExpression(@"^[^@\s]+@[^@\s]+\.[^@\s]+$", ErrorMessage = "Email must be in format: name@domain.com")]
         public string Email { get; set; }
 
         [Required]

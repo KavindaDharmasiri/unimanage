@@ -381,6 +381,36 @@ footer {
     border: 1px solid #e8eaed;
 }
 
+/* Status badges */
+.status-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-badge.active {
+    background: #e3f2fd;
+    color: #1565c0;
+}
+
+.status-badge.success {
+    background: #e8f5e8;
+    color: #2e7d32;
+}
+
+.status-badge.pending {
+    background: #fff3e0;
+    color: #ef6c00;
+}
+
+.status-badge.error {
+    background: #ffebee;
+    color: #c62828;
+}
+
 @media (max-width: 768px) {
     .navbar .container {
         flex-direction: column;

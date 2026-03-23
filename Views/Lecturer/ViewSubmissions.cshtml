@@ -3,33 +3,170 @@
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
     ViewBag.Title = "View Submissions";
+    var assignment = (uniManage.Models.Assignment)ViewBag.Assignment;
 }
 
-<h2>Assignment Submissions</h2>
+<div class="page-title">Assignment Submissions</div>
+<div class="page-subtitle">@assignment.Title - @assignment.Course.CourseName</div>
 
 @if (TempData["Success"] != null)
 {
-    <div class="alert alert-success">@TempData["Success"]</div>
+    <div class="alert alert-success">
+        <i class="fas fa-check-circle" style="margin-right: 0.5rem;"></i>
+        @TempData["Success"]
+    </div>
 }
 
-<table class="table">
-    <thead>
-        <tr>
-            <th>Student</th>
-            <th>Submission Date</th>
-            <th>Grade</th>
-            <th>Action</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var submission in Model)
-        {
-            <tr>
-                <td>@submission.Student.User.FullName</td>
-                <td>@submission.SubmissionDate.ToString("yyyy-MM-dd HH:mm")</td>
-                <td>@(submission.Grade.HasValue ? submission.Grade.ToString() : "Not Graded")</td>
-                <td><a href="@Url.Action("GradeSubmission", "Lecturer", new { id = submission.SubmissionId })" class="btn btn-sm">Grade</a></td>
-            </tr>
-        }
-    </tbody>
-</table>
+<!-- Assignment Info -->
+<div class="stat-card" style="margin-bottom: 2rem;">
+    <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+        <div class="stat-icon blue">
+            <i class="fas fa-tasks"></i>
+        </div>
+        <div style="flex: 1;">
+            <h3 style="margin: 0; font-size: 1.125rem; font-weight: 600;">@assignment.Title</h3>
+            <p style="margin: 0; color: #64748b;">Due: @assignment.DueDate.ToString("MMM dd, yyyy HH:mm") | Max Marks: @assignment.MaxMarks</p>
+        </div>
+    </div>
+</div>
+
+<!-- Submissions Stats -->
+<div class="stats-grid" style="margin-bottom: 2rem;">
+    @{
+        var totalSubmissions = Model.Count;
+        var onTimeSubmissions = Model.Count(s => !s.IsLateSubmission);
+        var lateSubmissions = Model.Count(s => s.IsLateSubmission);
+        var gradedSubmissions = Model.Count(s => s.Grade.HasValue);
+    }
+    
+    <div class="stat-card">
+        <div class="stat-icon blue">
+            <i class="fas fa-file-alt"></i>
+        </div>
+        <div class="stat-value">@totalSubmissions</div>
+        <div class="stat-label">Total Submissions</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon green">
+            <i class="fas fa-check"></i>
+        </div>
+        <div class="stat-value">@onTimeSubmissions</div>
+        <div class="stat-label">On Time</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon orange">
+            <i class="fas fa-clock"></i>
+        </div>
+        <div class="stat-value">@lateSubmissions</div>
+        <div class="stat-label">Late Submissions</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon purple">
+            <i class="fas fa-star"></i>
+        </div>
+        <div class="stat-value">@gradedSubmissions</div>
+        <div class="stat-label">Graded</div>
+    </div>
+</div>
+
+<!-- Submissions Table -->
+<div class="table-container">
+    <div class="table-header">
+        <div class="table-title">Student Submissions</div>
+        <span class="status-badge active">@totalSubmissions submissions</span>
+    </div>
+    
+    @if (Model.Any())
+    {
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Student Details</th>
+                    <th>Submission Date</th>
+                    <th>Status</th>
+                    <th>Grade</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var submission in Model.OrderBy(s => s.SubmissionDate))
+                {
+                    <tr>
+                        <td>
+                            <div class="user-info">
+                                <div class="user-avatar-table" style="background: @(submission.IsLateSubmission ? "#f59e0b" : "#10b981");">
+                                    @submission.Student.User.FullName.Substring(0, 1).ToUpper()
+                                </div>
+                                <div class="user-details">
+                                    <h4>@submission.Student.User.FullName</h4>
+                                    <p>@submission.Student.StudentNumber</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="user-details">
+                                <h4>@submission.SubmissionDate.ToString("MMM dd, yyyy")</h4>
+                                <p>@submission.SubmissionDate.ToString("HH:mm")</p>
+                            </div>
+                        </td>
+                        <td>
+                            @if (submission.IsLateSubmission)
+                            {
+                                <span class="status-badge" style="background: #f59e0b; color: white;">
+                                    <i class="fas fa-clock"></i> Late (@submission.DaysLate day(s))
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="status-badge success">
+                                    <i class="fas fa-check"></i> On Time
+                                </span>
+                            }
+                        </td>
+                        <td>
+                            @if (submission.Grade.HasValue)
+                            {
+                                <div class="user-details">
+                                    <h4 style="color: #10b981;">@submission.Grade/@assignment.MaxMarks</h4>
+                                    <p>Graded</p>
+                                </div>
+                            }
+                            else
+                            {
+                                <span class="status-badge pending">Not Graded</span>
+                            }
+                        </td>
+                        <td>
+                            <a href="@Url.Action("GradeSubmission", "Lecturer", new { id = submission.SubmissionId })" class="btn-manage" style="color: #4f46e5;">Grade</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <div style="text-align: center; padding: 4rem; color: #64748b;">
+            <i class="fas fa-inbox" style="font-size: 4rem; margin-bottom: 1rem; color: #cbd5e1;"></i>
+            <h3 style="color: #374151; margin-bottom: 0.5rem;">No Submissions Yet</h3>
+            <p>No students have submitted this assignment yet.</p>
+        </div>
+    }
+</div>
+
+<div style="margin-top: 2rem;">
+    <a href="@Url.Action("CourseDetails", "Lecturer", new { id = assignment.CourseId })" style="background: #64748b; color: white; padding: 0.75rem 1.5rem; border-radius: 8px; text-decoration: none; font-weight: 500; display: inline-flex; align-items: center; gap: 0.5rem;">
+        <i class="fas fa-arrow-left"></i>
+        Back to Course
+    </a>
+</div>
+
+<style>
+.stat-icon.purple {
+    background: #8b5cf6;
+    color: white;
+}
+</style>

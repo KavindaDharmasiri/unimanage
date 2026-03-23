@@ -2,20 +2,82 @@
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
     ViewBag.Title = "Submit Assignment";
+    var isOverdue = (bool)ViewBag.IsOverdue;
+    var daysLate = (int)ViewBag.DaysLate;
+    var timeRemaining = (string)ViewBag.TimeRemaining;
+    var alreadySubmitted = (bool)ViewBag.AlreadySubmitted;
 }
 
 <div class="page-title">Submit Assignment</div>
 <div class="page-subtitle">Complete and submit your assignment</div>
 
+<!-- Deadline Status Alert -->
+@if (isOverdue && !alreadySubmitted)
+{
+    <div class="alert alert-warning" style="margin-bottom: 1.5rem;">
+        <i class="fas fa-exclamation-triangle" style="margin-right: 0.5rem;"></i>
+        <div>
+            <strong>Assignment Overdue!</strong><br>
+            This assignment was due @Model.DueDate.ToString("MMM dd, yyyy HH:mm") (@daysLate day(s) ago).<br>
+            <strong>Late submissions are accepted but may receive reduced marks.</strong>
+        </div>
+    </div>
+}
+@if (!isOverdue && !alreadySubmitted)
+{
+    <div class="alert alert-success" style="margin-bottom: 1.5rem;">
+        <i class="fas fa-clock" style="margin-right: 0.5rem;"></i>
+        <div>
+            <strong>On Time Submission</strong><br>
+            @timeRemaining until the deadline (@Model.DueDate.ToString("MMM dd, yyyy HH:mm"))
+        </div>
+    </div>
+}
+
+<!-- Already Submitted Alert -->
+@if (alreadySubmitted)
+{
+    var existingSubmission = (uniManage.Models.AssignmentSubmission)ViewBag.ExistingSubmission;
+    <div class="alert alert-success" style="margin-bottom: 1.5rem;">
+        <i class="fas fa-check-circle" style="margin-right: 0.5rem;"></i>
+        <div>
+            <strong>Assignment Already Submitted</strong><br>
+            Submitted on @existingSubmission.SubmissionDate.ToString("MMM dd, yyyy HH:mm")
+            @if (existingSubmission.IsLateSubmission)
+            {
+                <span style="color: #f59e0b;"> - Late Submission (@existingSubmission.DaysLate day(s) late)</span>
+            }
+            else
+            {
+                <span style="color: #10b981;"> - On Time</span>
+            }
+        </div>
+    </div>
+}
+
 <!-- Assignment Information -->
 <div class="stat-card" style="margin-bottom: 2rem;">
     <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
-        <div class="stat-icon orange">
+        <div class="stat-icon @(isOverdue ? "red" : "orange")">
             <i class="fas fa-tasks"></i>
         </div>
-        <div>
+        <div style="flex: 1;">
             <h3 style="margin: 0; font-size: 1.25rem; font-weight: 600;">@Model.Title</h3>
             <p style="margin: 0; color: #64748b;">Assignment Details</p>
+        </div>
+        <div style="text-align: right;">
+            @if (isOverdue)
+            {
+                <span class="status-badge error" style="background: #ef4444; color: white;">
+                    <i class="fas fa-exclamation-triangle"></i> OVERDUE
+                </span>
+            }
+            else
+            {
+                <span class="status-badge active">
+                    <i class="fas fa-clock"></i> ACTIVE
+                </span>
+            }
         </div>
     </div>
     
@@ -26,7 +88,15 @@
         </div>
         <div>
             <div style="color: #64748b; font-size: 0.875rem; margin-bottom: 0.25rem;">Due Date</div>
-            <div style="font-weight: 500;">@Model.DueDate.ToString("MMM dd, yyyy HH:mm")</div>
+            <div style="font-weight: 500; color: @(isOverdue ? "#ef4444" : "#1a202c");">@Model.DueDate.ToString("MMM dd, yyyy HH:mm")</div>
+            @if (isOverdue)
+            {
+                <div style="font-size: 0.75rem; color: #ef4444; margin-top: 0.25rem;">@daysLate day(s) overdue</div>
+            }
+            else
+            {
+                <div style="font-size: 0.75rem; color: #10b981; margin-top: 0.25rem;">@timeRemaining</div>
+            }
         </div>
         <div>
             <div style="color: #64748b; font-size: 0.875rem; margin-bottom: 0.25rem;">Max Marks</div>
@@ -47,32 +117,122 @@
 </div>
 
 <!-- Submission Form -->
-<div class="table-container">
-    <div class="table-header">
-        <div class="table-title">Your Submission</div>
-    </div>
-    
-    <div style="padding: 2rem;">
-        @using (Html.BeginForm("SubmitAssignment", "Student", FormMethod.Post))
-        {
-            @Html.AntiForgeryToken()
-            @Html.Hidden("id", Model.AssignmentId)
+@if (!alreadySubmitted)
+{
+    <div class="table-container">
+        <div class="table-header">
+            <div class="table-title">Your Submission</div>
+            @if (isOverdue)
+            {
+                <span class="status-badge error" style="background: #ef4444; color: white; font-size: 0.75rem;">
+                    Late Submission Allowed
+                </span>
+            }
+        </div>
+        
+        <div style="padding: 2rem;">
+            @if (isOverdue)
+            {
+                <div style="background: #fef3c7; border: 1px solid #fcd34d; border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem; color: #92400e;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>Late Submission Notice:</strong>
+                    </div>
+                    <p style="margin: 0.5rem 0 0 0; color: #92400e; font-size: 0.875rem;">
+                        This assignment is @daysLate day(s) overdue. Your submission will be marked as late and may receive reduced marks according to the course policy.
+                    </p>
+                </div>
+            }
             
-            <div class="form-group">
-                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: #1a202c;">Your Submission Content</label>
-                <textarea name="content" rows="10" required style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.95rem; resize: vertical; min-height: 200px;" placeholder="Enter your assignment submission here..."></textarea>
+            @using (Html.BeginForm("SubmitAssignment", "Student", FormMethod.Post))
+            {
+                @Html.AntiForgeryToken()
+                @Html.Hidden("id", Model.AssignmentId)
+                
+                <div class="form-group">
+                    <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: #1a202c;">Your Submission Content</label>
+                    <textarea name="submissionText" rows="10" required style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.95rem; resize: vertical; min-height: 200px;" placeholder="Enter your assignment submission here..."></textarea>
+                </div>
+                
+                <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                    <button type="submit" style="background: @(isOverdue ? "#f59e0b" : "#10b981"); color: white; padding: 0.75rem 1.5rem; border: none; border-radius: 8px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fas fa-upload"></i>
+                        @(isOverdue ? "Submit Late Assignment" : "Submit Assignment")
+                    </button>
+                    <a href="@Url.Action("Assignments", "Student")" style="background: #64748b; color: white; padding: 0.75rem 1.5rem; border-radius: 8px; text-decoration: none; font-weight: 500; display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fas fa-arrow-left"></i>
+                        Cancel
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+}
+else
+{
+    <!-- Show existing submission -->
+    var existingSubmission = (uniManage.Models.AssignmentSubmission)ViewBag.ExistingSubmission;
+    <div class="table-container">
+        <div class="table-header">
+            <div class="table-title">Your Submission</div>
+            <span class="status-badge success">
+                <i class="fas fa-check"></i> Submitted
+            </span>
+        </div>
+        
+        <div style="padding: 2rem;">
+            <div style="background: #f8fafc; border-radius: 8px; padding: 1.5rem; border: 1px solid #e2e8f0;">
+                <div style="margin-bottom: 1rem;">
+                    <strong>Submission Date:</strong> @existingSubmission.SubmissionDate.ToString("MMM dd, yyyy HH:mm")
+                    @if (existingSubmission.IsLateSubmission)
+                    {
+                        <span style="color: #f59e0b; font-weight: 500;"> (Late - @existingSubmission.DaysLate day(s))</span>
+                    }
+                    else
+                    {
+                        <span style="color: #10b981; font-weight: 500;"> (On Time)</span>
+                    }
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <strong>Content:</strong>
+                </div>
+                <div style="background: white; padding: 1rem; border-radius: 6px; border: 1px solid #e2e8f0; white-space: pre-wrap;">@existingSubmission.SubmissionText</div>
+                
+                @if (existingSubmission.Grade.HasValue)
+                {
+                    <div style="margin-top: 1rem; padding: 1rem; background: #ecfdf5; border-radius: 6px; border: 1px solid #a7f3d0;">
+                        <div style="color: #065f46;"><strong>Grade:</strong> @existingSubmission.Grade/@Model.MaxMarks</div>
+                        @if (!string.IsNullOrEmpty(existingSubmission.Feedback))
+                        {
+                            <div style="margin-top: 0.5rem; color: #065f46;"><strong>Feedback:</strong> @existingSubmission.Feedback</div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div style="margin-top: 1rem; padding: 1rem; background: #fef3c7; border-radius: 6px; border: 1px solid #fcd34d;">
+                        <div style="color: #92400e;"><strong>Status:</strong> Pending Grading</div>
+                    </div>
+                }
             </div>
             
-            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
-                <button type="submit" style="background: #10b981; color: white; padding: 0.75rem 1.5rem; border: none; border-radius: 8px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
-                    <i class="fas fa-upload"></i>
-                    Submit Assignment
-                </button>
-                <a href="@Url.Action("Assignments", "Student")" style="background: #64748b; color: white; padding: 0.75rem 1.5rem; border-radius: 8px; text-decoration: none; font-weight: 500; display: flex; align-items: center; gap: 0.5rem;">
+            <div style="margin-top: 2rem;">
+                <a href="@Url.Action("Assignments", "Student")" style="background: #4f46e5; color: white; padding: 0.75rem 1.5rem; border-radius: 8px; text-decoration: none; font-weight: 500; display: inline-flex; align-items: center; gap: 0.5rem;">
                     <i class="fas fa-arrow-left"></i>
-                    Cancel
+                    Back to Assignments
                 </a>
             </div>
-        }
+        </div>
     </div>
-</div>
+}
+
+<style>
+.stat-icon.red {
+    background: #ef4444;
+    color: white;
+}
+.stat-icon.orange {
+    background: #f59e0b;
+    color: white;
+}
+</style>

@@ -2,6 +2,7 @@
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
     ViewBag.Title = "My Assignments";
+    var submissions = (Dictionary<int, uniManage.Models.AssignmentSubmission>)ViewBag.Submissions;
 }
 
 <div class="page-title">My Assignments</div>
@@ -15,14 +16,30 @@
         @TempData["Success"]
     </div>
 }
+@if (TempData["Warning"] != null)
+{
+    <div class="alert alert-warning">
+        <i class="fas fa-exclamation-triangle" style="margin-right: 0.5rem;"></i>
+        @TempData["Warning"]
+    </div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-error">
+        <i class="fas fa-exclamation-circle" style="margin-right: 0.5rem;"></i>
+        @TempData["Error"]
+    </div>
+}
 
 <!-- Stats Grid -->
 <div class="stats-grid">
     @{
         var totalAssignments = Model.Count;
-        var overdueAssignments = Model.Count(a => a.DueDate < DateTime.Now);
-        var dueSoon = Model.Count(a => a.DueDate >= DateTime.Now && a.DueDate <= DateTime.Now.AddDays(3));
-        var upcoming = Model.Count(a => a.DueDate > DateTime.Now.AddDays(3));
+        var submittedAssignments = submissions.Count;
+        var notSubmittedAssignments = totalAssignments - submittedAssignments;
+        var overdueAssignments = Model.Count(a => a.DueDate < DateTime.Now && !submissions.ContainsKey(a.AssignmentId));
+        var lateSubmissions = submissions.Values.Count(s => s.IsLateSubmission);
+        var onTimeSubmissions = submissions.Values.Count(s => !s.IsLateSubmission);
     }
     
     <div class="stat-card">
@@ -35,6 +52,24 @@
     </div>
     
     <div class="stat-card">
+        <div class="stat-icon green">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <div class="stat-value">@submittedAssignments</div>
+        <div class="stat-label">Submitted</div>
+        <div class="stat-change positive">@onTimeSubmissions on time, @lateSubmissions late</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon orange">
+            <i class="fas fa-clock"></i>
+        </div>
+        <div class="stat-value">@notSubmittedAssignments</div>
+        <div class="stat-label">Not Submitted</div>
+        <div class="stat-change neutral">Pending submission</div>
+    </div>
+    
+    <div class="stat-card">
         <div class="stat-icon red">
             <i class="fas fa-exclamation-triangle"></i>
         </div>
@@ -42,23 +77,49 @@
         <div class="stat-label">Overdue</div>
         <div class="stat-change negative">Need attention</div>
     </div>
-    
-    <div class="stat-card">
-        <div class="stat-icon orange">
-            <i class="fas fa-clock"></i>
+</div>
+
+<!-- Filter Section -->
+<div style="background: white; padding: 1.5rem; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 2rem;">
+    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <h3 style="margin: 0; font-size: 1.125rem; font-weight: 600; color: #1a202c;">Filter Assignments</h3>
+            <p style="margin: 0; color: #64748b; font-size: 0.875rem;">Filter by submission status or course</p>
         </div>
-        <div class="stat-value">@dueSoon</div>
-        <div class="stat-label">Due Soon</div>
-        <div class="stat-change neutral">Next 3 days</div>
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <button onclick="filterAssignments('all')" class="filter-btn active" id="filter-all">All (@totalAssignments)</button>
+            <button onclick="filterAssignments('submitted')" class="filter-btn" id="filter-submitted">Submitted (@submittedAssignments)</button>
+            <button onclick="filterAssignments('not-submitted')" class="filter-btn" id="filter-not-submitted">Not Submitted (@notSubmittedAssignments)</button>
+            <button onclick="filterAssignments('overdue')" class="filter-btn" id="filter-overdue">Overdue (@overdueAssignments)</button>
+        </div>
     </div>
     
-    <div class="stat-card">
-        <div class="stat-icon green">
-            <i class="fas fa-calendar-alt"></i>
+    <!-- Course Filter -->
+    <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e2e8f0;">
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+            <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+                <label style="font-weight: 500; color: #374151;">Filter by Course:</label>
+                <select id="courseFilter" onchange="filterByCourse()" style="padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; background: white;">
+                    <option value="">All Courses</option>
+                    @foreach (var course in Model.Select(a => new { a.Course.CourseId, a.Course.CourseName, a.Course.CourseCode }).Distinct())
+                    {
+                        <option value="@course.CourseId">@course.CourseName (@course.CourseCode)</option>
+                    }
+                </select>
+            </div>
+            <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+                <label style="font-weight: 500; color: #374151;">Sort by:</label>
+                <select id="sortFilter" onchange="sortAssignments()" style="padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; background: white;">
+                    <option value="due-date-asc">Due Date (Earliest First)</option>
+                    <option value="due-date-desc">Due Date (Latest First)</option>
+                    <option value="course-name">Course Name (A-Z)</option>
+                    <option value="assignment-name">Assignment Name (A-Z)</option>
+                    <option value="status">Status (Submitted First)</option>
+                    <option value="points">Points (Highest First)</option>
+                </select>
+                <button onclick="clearFilters()" style="padding: 0.5rem 1rem; background: #6b7280; color: white; border: none; border-radius: 6px; font-size: 0.875rem; cursor: pointer;">Clear All</button>
+            </div>
         </div>
-        <div class="stat-value">@upcoming</div>
-        <div class="stat-label">Upcoming</div>
-        <div class="stat-change positive">Future assignments</div>
     </div>
 </div>
 
@@ -66,6 +127,9 @@
 <div class="table-container">
     <div class="table-header">
         <div class="table-title">All Assignments</div>
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <span style="font-size: 0.875rem; color: #64748b;" id="resultCount">Showing @totalAssignments assignments</span>
+        </div>
     </div>
     
     @if (Model.Any())
@@ -76,7 +140,8 @@
                     <th>Assignment Details</th>
                     <th>Course</th>
                     <th>Due Date</th>
-                    <th>Priority</th>
+                    <th>Submission Status</th>
+                    <th>Grade</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -85,14 +150,30 @@
                 {
                     var daysUntilDue = (assignment.DueDate - DateTime.Now).Days;
                     var isOverdue = assignment.DueDate < DateTime.Now;
-                    var priorityLevel = isOverdue ? "Overdue" : daysUntilDue <= 1 ? "High" : daysUntilDue <= 3 ? "Medium" : "Low";
-                    var priorityClass = isOverdue ? "status-badge" : daysUntilDue <= 1 ? "status-badge" : daysUntilDue <= 3 ? "status-badge pending" : "status-badge active";
+                    var isSubmitted = submissions.ContainsKey(assignment.AssignmentId);
+                    var submission = isSubmitted ? submissions[assignment.AssignmentId] : null;
+                    var isLate = submission != null && submission.IsLateSubmission;
+                    var daysLate = submission != null ? submission.DaysLate ?? 0 : 0;
                     
-                    <tr>
+                    var rowClass = "";
+                    if (isSubmitted) 
+                    {
+                        rowClass = "submitted";
+                    }
+                    else if (isOverdue) 
+                    {
+                        rowClass = "overdue";
+                    }
+                    else 
+                    {
+                        rowClass = "not-submitted";
+                    }
+                    
+                    <tr class="assignment-row" data-status="@rowClass" data-course-id="@assignment.Course.CourseId" data-due-date="@assignment.DueDate.ToString("yyyy-MM-dd HH:mm:ss")" data-course-name="@assignment.Course.CourseName" data-assignment-name="@assignment.Title" data-points="@assignment.MaxMarks" data-submission-status="@(isSubmitted ? "1" : "0")">
                         <td>
                             <div class="user-info">
-                                <div class="user-avatar-table" style="background: @(isOverdue ? "#ef4444" : daysUntilDue <= 1 ? "#ef4444" : daysUntilDue <= 3 ? "#f59e0b" : "#10b981");">
-                                    <i class="fas fa-tasks"></i>
+                                <div class="user-avatar-table" style="background: @(isSubmitted ? (isLate ? "#f59e0b" : "#10b981") : isOverdue ? "#ef4444" : "#4f46e5");">
+                                    <i class="fas @(isSubmitted ? "fa-check" : "fa-tasks")"></i>
                                 </div>
                                 <div class="user-details">
                                     <h4>@assignment.Title</h4>
@@ -111,15 +192,15 @@
                                 <h4>@assignment.DueDate.ToString("MMM dd, yyyy")</h4>
                                 <p>
                                     @assignment.DueDate.ToString("HH:mm")
-                                    @if (isOverdue)
+                                    @if (isOverdue && !isSubmitted)
                                     {
                                         <span style="color: #ef4444; font-weight: 500;">(Overdue)</span>
                                     }
-                                    else if (daysUntilDue == 0)
+                                    else if (daysUntilDue == 0 && !isSubmitted)
                                     {
                                         <span style="color: #f59e0b; font-weight: 500;">(Due Today)</span>
                                     }
-                                    else if (daysUntilDue > 0)
+                                    else if (daysUntilDue > 0 && !isSubmitted)
                                     {
                                         <span>(@daysUntilDue days left)</span>
                                     }
@@ -127,10 +208,69 @@
                             </div>
                         </td>
                         <td>
-                            <span class="@priorityClass">@priorityLevel Priority</span>
+                            @if (isSubmitted)
+                            {
+                                <div>
+                                    @if (isLate)
+                                    {
+                                        <span class="status-badge" style="background: #f59e0b; color: white; margin-bottom: 0.25rem;">
+                                            <i class="fas fa-clock"></i> Late Submission
+                                        </span>
+                                        <div style="font-size: 0.75rem; color: #f59e0b;">@daysLate day(s) late</div>
+                                    }
+                                    else
+                                    {
+                                        <span class="status-badge success">
+                                            <i class="fas fa-check"></i> Submitted On Time
+                                        </span>
+                                    }
+                                    <div style="font-size: 0.75rem; color: #64748b; margin-top: 0.25rem;">@submission.SubmissionDate.ToString("MMM dd, HH:mm")</div>
+                                </div>
+                            }
+                            else if (isOverdue)
+                            {
+                                <span class="status-badge error">
+                                    <i class="fas fa-exclamation-triangle"></i> Overdue
+                                </span>
+                            }
+                            else
+            {
+                                <span class="status-badge pending">
+                                    <i class="fas fa-clock"></i> Not Submitted
+                                </span>
+                            }
                         </td>
                         <td>
-                            <a href="@Url.Action("SubmitAssignment", "Student", new { id = assignment.AssignmentId })" class="btn-manage" style="color: @(isOverdue ? "#ef4444" : daysUntilDue <= 1 ? "#ef4444" : daysUntilDue <= 3 ? "#f59e0b" : "#10b981");">Submit</a>
+                            @if (isSubmitted)
+                            {
+                                if (submission.Grade.HasValue)
+                                {
+                                    <div class="user-details">
+                                        <h4 style="color: #10b981;">@submission.Grade/@assignment.MaxMarks</h4>
+                                        <p>Graded</p>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <span class="status-badge pending">Pending Grade</span>
+                                }
+                            }
+                            else
+                            {
+                                <span style="color: #64748b;">-</span>
+                            }
+                        </td>
+                        <td>
+                            @if (isSubmitted)
+                            {
+                                <a href="@Url.Action("SubmitAssignment", "Student", new { id = assignment.AssignmentId })" class="btn-manage" style="color: #4f46e5;">View Submission</a>
+                            }
+                            else
+                            {
+                                <a href="@Url.Action("SubmitAssignment", "Student", new { id = assignment.AssignmentId })" class="btn-manage" style="color: @(isOverdue ? "#ef4444" : "#10b981");">
+                                    @(isOverdue ? "Submit Late" : "Submit")
+                                </a>
+                            }
                         </td>
                     </tr>
                 }
@@ -147,3 +287,199 @@
         </div>
     }
 </div>
+
+<style>
+.filter-btn {
+    padding: 0.5rem 1rem;
+    border: 1px solid #e2e8f0;
+    background: white;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.filter-btn:hover {
+    background: #f8fafc;
+}
+
+.filter-btn.active {
+    background: #4f46e5;
+    color: white;
+    border-color: #4f46e5;
+}
+
+.assignment-row.hidden {
+    display: none;
+}
+
+.alert {
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+}
+.alert-success {
+    background: #d1fae5;
+    color: #065f46;
+    border: 1px solid #a7f3d0;
+}
+.alert-error {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fca5a5;
+}
+.alert-warning {
+    background: #fef3c7;
+    color: #92400e;
+    border: 1px solid #fcd34d;
+}
+</style>
+
+<script>
+function filterAssignments(status) {
+    // Remove active class from all buttons
+    document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+    
+    // Add active class to clicked button
+    document.getElementById('filter-' + status).classList.add('active');
+    
+    // Clear course filter when using status filter
+    document.getElementById('courseFilter').value = '';
+    
+    // Show/hide rows based on status
+    let visibleCount = 0;
+    document.querySelectorAll('.assignment-row').forEach(row => {
+        const rowStatus = row.dataset.status;
+        
+        if (status === 'all') {
+            row.classList.remove('hidden');
+            visibleCount++;
+        } else if (status === 'submitted' && rowStatus === 'submitted') {
+            row.classList.remove('hidden');
+            visibleCount++;
+        } else if (status === 'not-submitted' && rowStatus === 'not-submitted') {
+            row.classList.remove('hidden');
+            visibleCount++;
+        } else if (status === 'overdue' && rowStatus === 'overdue') {
+            row.classList.remove('hidden');
+            visibleCount++;
+        } else {
+            row.classList.add('hidden');
+        }
+    });
+    
+    // Update result count
+    updateResultCount(visibleCount);
+}
+
+function filterByCourse() {
+    const selectedCourseId = document.getElementById('courseFilter').value;
+    
+    // Clear status filter buttons
+    document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+    
+    let visibleCount = 0;
+    document.querySelectorAll('.assignment-row').forEach(row => {
+        const courseCell = row.querySelector('td:nth-child(2) .user-details p').textContent;
+        
+        if (selectedCourseId === '') {
+            row.classList.remove('hidden');
+            visibleCount++;
+        } else {
+            // Get course ID from the row data (we'll add this as a data attribute)
+            const rowCourseId = row.dataset.courseId;
+            if (rowCourseId === selectedCourseId) {
+                row.classList.remove('hidden');
+                visibleCount++;
+            } else {
+                row.classList.add('hidden');
+            }
+        }
+    });
+    
+    // Update result count
+    updateResultCount(visibleCount);
+}
+
+function sortAssignments() {
+    const sortBy = document.getElementById('sortFilter').value;
+    const tbody = document.querySelector('.table tbody');
+    const rows = Array.from(tbody.querySelectorAll('.assignment-row'));
+    
+    rows.sort((a, b) => {
+        let aValue, bValue;
+        
+        switch (sortBy) {
+            case 'due-date-asc':
+                aValue = new Date(a.dataset.dueDate);
+                bValue = new Date(b.dataset.dueDate);
+                return aValue - bValue;
+                
+            case 'due-date-desc':
+                aValue = new Date(a.dataset.dueDate);
+                bValue = new Date(b.dataset.dueDate);
+                return bValue - aValue;
+                
+            case 'course-name':
+                aValue = a.dataset.courseName.toLowerCase();
+                bValue = b.dataset.courseName.toLowerCase();
+                return aValue.localeCompare(bValue);
+                
+            case 'assignment-name':
+                aValue = a.dataset.assignmentName.toLowerCase();
+                bValue = b.dataset.assignmentName.toLowerCase();
+                return aValue.localeCompare(bValue);
+                
+            case 'status':
+                aValue = parseInt(a.dataset.submissionStatus);
+                bValue = parseInt(b.dataset.submissionStatus);
+                return bValue - aValue;
+                
+            case 'points':
+                aValue = parseInt(a.dataset.points);
+                bValue = parseInt(b.dataset.points);
+                return bValue - aValue;
+                
+            default:
+                return 0;
+        }
+    });
+    
+    tbody.innerHTML = '';
+    rows.forEach(row => tbody.appendChild(row));
+    
+    const visibleCount = rows.filter(row => !row.classList.contains('hidden')).length;
+    updateResultCount(visibleCount);
+}
+
+function clearFilters() {
+    document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+    document.getElementById('filter-all').classList.add('active');
+    document.getElementById('courseFilter').value = '';
+    document.getElementById('sortFilter').value = 'due-date-asc';
+    
+    let totalCount = 0;
+    document.querySelectorAll('.assignment-row').forEach(row => {
+        row.classList.remove('hidden');
+        totalCount++;
+    });
+    
+    sortAssignments();
+    updateResultCount(totalCount);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    sortAssignments();
+});
+
+function updateResultCount(count) {
+    const resultElement = document.getElementById('resultCount');
+    if (count === 1) {
+        resultElement.textContent = 'Showing 1 assignment';
+    } else {
+        resultElement.textContent = `Showing ${count} assignments`;
+    }
+}
+</script>

@@ -52,6 +52,65 @@ namespace uniManage.Controllers
             return View(course);
         }
         
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public JsonResult UpdateEnrollmentStatus(int enrollmentId, string status)
+        {
+            try
+            {
+                if (Session["UserId"] == null || Session["UserRole"].ToString() != "Lecturer")
+                    return Json(new { success = false, message = "Unauthorized" });
+
+                var enrollment = db.Enrollments.Find(enrollmentId);
+                if (enrollment == null)
+                    return Json(new { success = false, message = "Enrollment not found" });
+
+                // Verify lecturer owns this course
+                var course = db.Courses.Find(enrollment.CourseId);
+                if (course.LecturerId != (int)Session["UserId"])
+                    return Json(new { success = false, message = "You can only update enrollments for your own courses" });
+
+                enrollment.Status = status;
+                db.SaveChanges();
+
+                return Json(new { success = true, message = "Enrollment status updated successfully" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Error updating enrollment: " + ex.Message });
+            }
+        }
+        
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public JsonResult BulkUpdateEnrollmentStatus(int courseId, string status)
+        {
+            try
+            {
+                if (Session["UserId"] == null || Session["UserRole"].ToString() != "Lecturer")
+                    return Json(new { success = false, message = "Unauthorized" });
+
+                // Verify lecturer owns this course
+                var course = db.Courses.Find(courseId);
+                if (course == null || course.LecturerId != (int)Session["UserId"])
+                    return Json(new { success = false, message = "You can only update enrollments for your own courses" });
+
+                // Update all active enrollments to the new status
+                var enrollments = db.Enrollments.Where(e => e.CourseId == courseId && e.Status == "Active").ToList();
+                foreach (var enrollment in enrollments)
+                {
+                    enrollment.Status = status;
+                }
+                db.SaveChanges();
+
+                return Json(new { success = true, message = $"Updated {enrollments.Count} enrollments to {status}" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Error updating enrollments: " + ex.Message });
+            }
+        }
+        
         public ActionResult CreateAssignment(int? courseId)
         {
             if (Session["UserRole"] == null || Session["UserRole"].ToString() != "Lecturer")

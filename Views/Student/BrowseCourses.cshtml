@@ -22,6 +22,13 @@
         @TempData["Error"]
     </div>
 }
+@if (TempData["Warning"] != null)
+{
+    <div class="alert alert-warning">
+        <i class="fas fa-exclamation-triangle" style="margin-right: 0.5rem;"></i>
+        @TempData["Warning"]
+    </div>
+}
 
 <!-- Filters -->
 <div class="filters">
@@ -38,8 +45,11 @@
     </select>
     <select class="filter-dropdown" id="availabilityFilter" onchange="filterCourses()">
         <option value="">All Courses</option>
-        <option value="available">Available</option>
+        <option value="active">My Active Courses</option>
+        <option value="completed">My Completed Courses</option>
+        <option value="available">Available to Enroll</option>
         <option value="full">Full</option>
+        <option value="prerequisite-met">Prerequisites Met</option>
     </select>
 </div>
 
@@ -52,13 +62,87 @@
         var isFull = course.Enrollments.Count >= course.MaxEnrollment;
         var lecturerName = course.Lecturer != null && course.Lecturer.User != null ? course.Lecturer.User.FullName : "Not Assigned";
         
-        <div class="stat-card" style="padding: 1.5rem;" data-course-name="@course.CourseName.ToLower()" data-course-code="@course.CourseCode.ToLower()" data-lecturer="@lecturerName.ToLower()" data-availability="@(isFull ? "full" : "available")">
+        // Get enrollment status for this student
+        var enrollmentStatus = "";
+        var studentEnrollments = (Dictionary<int, string>)ViewBag.StudentEnrollments;
+        if (studentEnrollments.ContainsKey(course.CourseId))
+        {
+            enrollmentStatus = studentEnrollments[course.CourseId];
+        }
+        
+        // Check prerequisites
+        var hasPrerequisite = course.PrerequisiteCourseId.HasValue;
+        var prerequisiteMet = true;
+        var prerequisiteStatus = "";
+        
+        if (hasPrerequisite)
+        {
+            var completedCourses = (List<int>)ViewBag.StudentCompletedCourses;
+            var activeCourses = (List<int>)ViewBag.StudentActiveCourses;
+            var prerequisiteCompleted = completedCourses.Contains(course.PrerequisiteCourseId.Value);
+            var prerequisiteActive = activeCourses.Contains(course.PrerequisiteCourseId.Value);
+            
+            if (prerequisiteCompleted)
+            {
+                prerequisiteStatus = "completed";
+            }
+            else if (prerequisiteActive)
+            {
+                prerequisiteStatus = "active";
+            }
+            else
+            {
+                prerequisiteMet = false;
+                prerequisiteStatus = "not-met";
+            }
+        }
+        
+        // Determine card styling based on enrollment status
+        var cardBorder = "";
+        var cardBackground = "";
+        if (enrollmentStatus == "Active")
+        {
+            cardBorder = "border: 2px solid #10b981; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);";
+            cardBackground = "background: linear-gradient(135deg, #ecfdf5 0%, #ffffff 100%);";
+        }
+        else if (enrollmentStatus == "Completed")
+        {
+            cardBorder = "border: 2px solid #6b7280; opacity: 0.8;";
+        }
+        
+        <div class="stat-card" style="padding: 1.5rem; @cardBorder @cardBackground" data-course-name="@course.CourseName.ToLower()" data-course-code="@course.CourseCode.ToLower()" data-lecturer="@lecturerName.ToLower()" data-availability="@(isFull ? "full" : "available")" data-prerequisite="@(prerequisiteMet ? "prerequisite-met" : "prerequisite-not-met")" data-enrollment-status="@enrollmentStatus.ToLower()">
+            
+            <!-- Course Status Badge -->
+            @if (!string.IsNullOrEmpty(enrollmentStatus))
+            {
+                <div style="position: absolute; top: 1rem; right: 1rem;">
+                    @if (enrollmentStatus == "Active")
+                    {
+                        <span class="status-badge success" style="background: #10b981; color: white; font-size: 0.75rem; padding: 0.25rem 0.5rem;">
+                            <i class="fas fa-play"></i> ACTIVE
+                        </span>
+                    }
+                    else if (enrollmentStatus == "Completed")
+                    {
+                        <span class="status-badge" style="background: #6b7280; color: white; font-size: 0.75rem; padding: 0.25rem 0.5rem;">
+                            <i class="fas fa-check"></i> COMPLETED
+                        </span>
+                    }
+                    else if (enrollmentStatus == "Dropped")
+                    {
+                        <span class="status-badge error" style="background: #ef4444; color: white; font-size: 0.75rem; padding: 0.25rem 0.5rem;">
+                            <i class="fas fa-times"></i> DROPPED
+                        </span>
+                    }
+                </div>
+            }
+            
             <!-- Course Header -->
-            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
-                <div class="stat-icon blue">
+            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; position: relative;">
+                <div class="stat-icon @(enrollmentStatus == "Active" ? "green" : "blue")">
                     @course.CourseCode.Substring(0, Math.Min(3, course.CourseCode.Length))
                 </div>
-                <div style="flex: 1;">
+                <div style="flex: 1; padding-right: 4rem;">
                     <h3 style="margin: 0; font-size: 1.125rem; font-weight: 600; color: #1a202c;">@course.CourseName</h3>
                     <p style="margin: 0; color: #64748b; font-size: 0.875rem;">@course.CourseCode</p>
                 </div>
@@ -76,23 +160,108 @@
                     <span style="color: #1a202c; font-weight: 500;">@lecturerName</span>
                 </div>
                 
+                <!-- Assignment Progress (for enrolled courses) -->
+                @if (isEnrolled && enrollmentStatus == "Active")
+                {
+                    var courseAssignments = course.Assignments.ToList();
+                    var totalAssignments = courseAssignments.Count;
+                    var submittedCount = 0;
+                    var overdueCount = 0;
+                    
+                    foreach (var assignment in courseAssignments)
+                    {
+                        if (((Dictionary<int, uniManage.Models.AssignmentSubmission>)ViewBag.Submissions).ContainsKey(assignment.AssignmentId))
+                        {
+                            submittedCount++;
+                        }
+                        else if (assignment.DueDate < DateTime.Now)
+                        {
+                            overdueCount++;
+                        }
+                    }
+                    
+                    var pendingCount = totalAssignments - submittedCount;
+                    
+                    if (totalAssignments > 0)
+                    {
+                        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; padding: 0.5rem; background: #f0f9ff; border-radius: 6px; border-left: 3px solid #0ea5e9;">
+                            <i class="fas fa-tasks" style="color: #0ea5e9; font-size: 0.875rem;"></i>
+                            <div style="flex: 1;">
+                                <div style="font-size: 0.75rem; color: #64748b; margin-bottom: 0.25rem;">Assignment Progress:</div>
+                                <div style="display: flex; gap: 1rem; font-size: 0.75rem;">
+                                    <span style="color: #10b981;"><i class="fas fa-check"></i> @submittedCount Submitted</span>
+                                    <span style="color: #f59e0b;"><i class="fas fa-clock"></i> @pendingCount Pending</span>
+                                    @if (overdueCount > 0)
+                                    {
+                                        <span style="color: #ef4444;"><i class="fas fa-exclamation-triangle"></i> @overdueCount Overdue</span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+                
+                <!-- Prerequisite Information -->
+                @if (hasPrerequisite)
+                {
+                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; padding: 0.5rem; background: #f8fafc; border-radius: 6px; border-left: 3px solid @(prerequisiteMet ? "#10b981" : "#ef4444");">
+                        <i class="fas fa-link" style="color: #64748b; font-size: 0.875rem;"></i>
+                        <div style="flex: 1;">
+                            <div style="font-size: 0.75rem; color: #64748b; margin-bottom: 0.25rem;">Prerequisite:</div>
+                            <div style="font-size: 0.875rem; color: #1a202c; font-weight: 500;">@course.PrerequisiteCourse.CourseName</div>
+                            @if (prerequisiteStatus == "completed")
+                            {
+                                <div style="font-size: 0.75rem; color: #10b981; margin-top: 0.25rem;">
+                                    <i class="fas fa-check-circle"></i> Completed
+                                </div>
+                            }
+                            else if (prerequisiteStatus == "active")
+                            {
+                                <div style="font-size: 0.75rem; color: #f59e0b; margin-top: 0.25rem;">
+                                    <i class="fas fa-clock"></i> Currently Enrolled
+                                </div>
+                            }
+                            else
+                            {
+                                <div style="font-size: 0.75rem; color: #ef4444; margin-top: 0.25rem;">
+                                    <i class="fas fa-exclamation-circle"></i> Not Met
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+                
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
                     <span style="color: #64748b; font-size: 0.875rem;">Enrollment</span>
                     <span style="color: #1a202c; font-weight: 500;">@course.Enrollments.Count / @course.MaxEnrollment</span>
                 </div>
                 
                 <div style="background: #f1f5f9; border-radius: 4px; height: 6px; overflow: hidden; margin-top: 0.5rem;">
-                    <div style="height: 100%; background: #4f46e5; width: @(enrollmentPercentage)%; transition: width 0.3s ease;"></div>
+                    <div style="height: 100%; background: @(enrollmentStatus == "Active" ? "#10b981" : "#4f46e5"); width: @(enrollmentPercentage)%; transition: width 0.3s ease;"></div>
                 </div>
             </div>
             
             <!-- Action Button -->
             <div style="text-align: center;">
-                @if (isEnrolled)
+                @if (enrollmentStatus == "Active")
                 {
-                    <button style="background: #64748b; color: white; padding: 0.5rem 1rem; border: none; border-radius: 6px; font-weight: 500; cursor: not-allowed;" disabled>
-                        <i class="fas fa-check"></i>
-                        Already Enrolled
+                    <a href="@Url.Action("CourseDetails", "Student", new { id = course.CourseId })" style="background: #10b981; color: white; padding: 0.5rem 1rem; border: none; border-radius: 6px; font-weight: 500; text-decoration: none; display: inline-block;">
+                        <i class="fas fa-book-open"></i>
+                        View Course
+                    </a>
+                }
+                else if (enrollmentStatus == "Completed")
+                {
+                    <button style="background: #6b7280; color: white; padding: 0.5rem 1rem; border: none; border-radius: 6px; font-weight: 500; cursor: not-allowed;" disabled>
+                        <i class="fas fa-graduation-cap"></i>
+                        Completed
+                    </button>
+                }
+                else if (enrollmentStatus == "Dropped")
+                {
+                    <button style="background: #ef4444; color: white; padding: 0.5rem 1rem; border: none; border-radius: 6px; font-weight: 500; cursor: not-allowed;" disabled>
+                        <i class="fas fa-ban"></i>
+                        Dropped
                     </button>
                 }
                 else if (isFull)
@@ -100,6 +269,13 @@
                     <button style="background: #ef4444; color: white; padding: 0.5rem 1rem; border: none; border-radius: 6px; font-weight: 500;" disabled>
                         <i class="fas fa-times"></i>
                         Course Full
+                    </button>
+                }
+                else if (hasPrerequisite && !prerequisiteMet)
+                {
+                    <button style="background: #ef4444; color: white; padding: 0.5rem 1rem; border: none; border-radius: 6px; font-weight: 500;" disabled>
+                        <i class="fas fa-lock"></i>
+                        Prerequisite Required
                     </button>
                 }
                 else
@@ -110,7 +286,14 @@
                         <input type="hidden" name="courseId" value="@course.CourseId" />
                         <button type="submit" style="background: #10b981; color: white; padding: 0.5rem 1rem; border: none; border-radius: 6px; font-weight: 500; cursor: pointer;">
                             <i class="fas fa-plus"></i>
-                            Enroll Now
+                            @if (hasPrerequisite && prerequisiteStatus == "active")
+                            {
+                                <text>Enroll (With Warning)</text>
+                            }
+                            else
+                            {
+                                <text>Enroll Now</text>
+                            }
                         </button>
                     }
                 }
@@ -128,6 +311,46 @@
     </div>
 }
 
+<style>
+.alert {
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+}
+.alert-success {
+    background: #d1fae5;
+    color: #065f46;
+    border: 1px solid #a7f3d0;
+}
+.alert-error {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fca5a5;
+}
+.alert-warning {
+    background: #fef3c7;
+    color: #92400e;
+    border: 1px solid #fcd34d;
+}
+
+/* Stat icon colors */
+.stat-icon.green {
+    background: #10b981;
+    color: white;
+}
+
+.stat-icon.blue {
+    background: #4f46e5;
+    color: white;
+}
+
+.stat-card {
+    position: relative;
+}
+</style>
+
 <script>
 function filterCourses() {
     const searchInput = document.getElementById('searchInput').value.toLowerCase();
@@ -140,10 +363,34 @@ function filterCourses() {
         const courseCode = card.dataset.courseCode;
         const lecturer = card.dataset.lecturer;
         const availability = card.dataset.availability;
+        const prerequisite = card.dataset.prerequisite;
+        const enrollmentStatus = card.dataset.enrollmentStatus;
         
         const matchesSearch = courseName.includes(searchInput) || courseCode.includes(searchInput);
         const matchesLecturer = lecturerFilter === '' || lecturer.includes(lecturerFilter);
-        const matchesAvailability = availabilityFilter === '' || availability === availabilityFilter;
+        
+        let matchesAvailability = true;
+        if (availabilityFilter !== '') {
+            switch (availabilityFilter) {
+                case 'active':
+                    matchesAvailability = enrollmentStatus === 'active';
+                    break;
+                case 'completed':
+                    matchesAvailability = enrollmentStatus === 'completed';
+                    break;
+                case 'available':
+                    matchesAvailability = availability === 'available' && enrollmentStatus === '';
+                    break;
+                case 'full':
+                    matchesAvailability = availability === 'full';
+                    break;
+                case 'prerequisite-met':
+                    matchesAvailability = prerequisite === 'prerequisite-met';
+                    break;
+                default:
+                    matchesAvailability = true;
+            }
+        }
         
         if (matchesSearch && matchesLecturer && matchesAvailability) {
             card.style.display = 'block';

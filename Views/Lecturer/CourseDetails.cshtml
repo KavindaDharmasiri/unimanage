@@ -4,6 +4,8 @@
     ViewBag.Title = "Course Details";
 }
 
+@Html.AntiForgeryToken()
+
 <div class="page-title">@Model.CourseName (@Model.CourseCode)</div>
 <div class="page-subtitle">Manage course content, assignments, and students</div>
 
@@ -48,7 +50,15 @@
 <div class="table-container">
     <div class="table-header">
         <div class="table-title">Enrolled Students</div>
-        <span class="status-badge active">@Model.Enrollments.Count students</span>
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <span class="status-badge active">@Model.Enrollments.Count students</span>
+            @if (Model.Enrollments.Any(e => e.Status == "Active"))
+            {
+                <button type="button" id="completeAllBtn" style="background: #10b981; color: white; padding: 0.5rem 1rem; border: none; border-radius: 6px; font-weight: 500; cursor: pointer;" onclick="completeCourse(@Model.CourseId)">
+                    <i class="fas fa-check-circle"></i> Complete Course
+                </button>
+            }
+        </div>
     </div>
     
     @if (Model.Enrollments.Any())
@@ -60,12 +70,13 @@
                     <th>Student Number</th>
                     <th>Email</th>
                     <th>Status</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach (var enrollment in Model.Enrollments)
                 {
-                    <tr>
+                    <tr id="enrollment-@enrollment.EnrollmentId">
                         <td>
                             <div class="user-info">
                                 <div class="user-avatar-table" style="background: #10b981;">
@@ -80,7 +91,24 @@
                         <td>@(enrollment.Student != null ? enrollment.Student.StudentNumber : "N/A")</td>
                         <td>@(enrollment.Student != null && enrollment.Student.User != null ? enrollment.Student.User.Email : "N/A")</td>
                         <td>
-                            <span class="status-badge @(enrollment.Status.ToLower() == "active" ? "active" : "pending")">@enrollment.Status</span>
+                            <span class="status-badge @(enrollment.Status.ToLower() == "active" ? "active" : enrollment.Status.ToLower() == "completed" ? "success" : "pending")" id="status-@enrollment.EnrollmentId">@enrollment.Status</span>
+                        </td>
+                        <td>
+                            @if (enrollment.Status == "Active")
+                            {
+                                <div style="display: flex; gap: 0.5rem;">
+                                    <button type="button" style="background: #10b981; color: white; padding: 0.25rem 0.5rem; border: none; border-radius: 4px; font-size: 0.75rem; cursor: pointer;" onclick="updateEnrollmentStatus(@enrollment.EnrollmentId, 'Completed')">
+                                        <i class="fas fa-check"></i> Complete
+                                    </button>
+                                    <button type="button" style="background: #ef4444; color: white; padding: 0.25rem 0.5rem; border: none; border-radius: 4px; font-size: 0.75rem; cursor: pointer;" onclick="updateEnrollmentStatus(@enrollment.EnrollmentId, 'Dropped')">
+                                        <i class="fas fa-times"></i> Drop
+                                    </button>
+                                </div>
+                            }
+                            else
+                            {
+                                <span style="color: #64748b; font-size: 0.875rem;">@enrollment.Status</span>
+                            }
                         </td>
                     </tr>
                 }
@@ -255,6 +283,153 @@ function confirmDelete(url, type) {
     }).then((result) => {
         if (result.isConfirmed) {
             window.location.href = url;
+        }
+    });
+}
+
+// Get anti-forgery token
+function getAntiForgeryToken() {
+    return document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+}
+
+// Complete entire course (bulk update)
+function completeCourse(courseId) {
+    Swal.fire({
+        title: 'Complete Course?',
+        text: 'This will mark ALL active students as completed. This action cannot be undone.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#10b981',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'Yes, complete course!',
+        cancelButtonText: 'Cancel'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Show loading
+            Swal.fire({
+                title: 'Processing...',
+                text: 'Updating enrollment statuses',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+            
+            // Create form data
+            const formData = new FormData();
+            formData.append('courseId', courseId);
+            formData.append('status', 'Completed');
+            formData.append('__RequestVerificationToken', getAntiForgeryToken());
+            
+            // Make AJAX call
+            fetch('@Url.Action("BulkUpdateEnrollmentStatus", "Lecturer")', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        title: 'Success!',
+                        text: data.message,
+                        icon: 'success',
+                        confirmButtonColor: '#10b981'
+                    }).then(() => {
+                        location.reload(); // Refresh page to show updated statuses
+                    });
+                } else {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: data.message,
+                        icon: 'error',
+                        confirmButtonColor: '#ef4444'
+                    });
+                }
+            })
+            .catch(error => {
+                Swal.fire({
+                    title: 'Error!',
+                    text: 'An error occurred while updating enrollments.',
+                    icon: 'error',
+                    confirmButtonColor: '#ef4444'
+                });
+            });
+        }
+    });
+}
+
+// Update individual enrollment status
+function updateEnrollmentStatus(enrollmentId, status) {
+    const actionText = status === 'Completed' ? 'complete' : 'drop';
+    const color = status === 'Completed' ? '#10b981' : '#ef4444';
+    
+    Swal.fire({
+        title: `${status} Student?`,
+        text: `Are you sure you want to ${actionText} this student?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: color,
+        cancelButtonColor: '#64748b',
+        confirmButtonText: `Yes, ${actionText}!`,
+        cancelButtonText: 'Cancel'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Create form data
+            const formData = new FormData();
+            formData.append('enrollmentId', enrollmentId);
+            formData.append('status', status);
+            formData.append('__RequestVerificationToken', getAntiForgeryToken());
+            
+            // Make AJAX call
+            fetch('@Url.Action("UpdateEnrollmentStatus", "Lecturer")', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update the status badge
+                    const statusBadge = document.getElementById(`status-${enrollmentId}`);
+                    statusBadge.textContent = status;
+                    statusBadge.className = `status-badge ${status.toLowerCase() === 'completed' ? 'success' : 'pending'}`;
+                    
+                    // Update the row to remove action buttons
+                    const row = document.getElementById(`enrollment-${enrollmentId}`);
+                    const actionsCell = row.querySelector('td:last-child');
+                    actionsCell.innerHTML = `<span style="color: #64748b; font-size: 0.875rem;">${status}</span>`;
+                    
+                    // Show success message
+                    Swal.fire({
+                        title: 'Success!',
+                        text: data.message,
+                        icon: 'success',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                    
+                    // Hide complete course button if no active students left
+                    const activeStatuses = document.querySelectorAll('.status-badge.active');
+                    if (activeStatuses.length === 0) {
+                        const completeBtn = document.getElementById('completeAllBtn');
+                        if (completeBtn) completeBtn.style.display = 'none';
+                    }
+                } else {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: data.message,
+                        icon: 'error',
+                        confirmButtonColor: '#ef4444'
+                    });
+                }
+            })
+            .catch(error => {
+                Swal.fire({
+                    title: 'Error!',
+                    text: 'An error occurred while updating the enrollment.',
+                    icon: 'error',
+                    confirmButtonColor: '#ef4444'
+                });
+            });
         }
     });
 }

@@ -1,0 +1,43 @@
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "Prerequisite Test";
+}
+
+<div class="page-title">Prerequisite System Test</div>
+<div class="page-subtitle">Testing prerequisite enrollment logic</div>
+
+<div style="background: white; padding: 2rem; border-radius: 12px; border: 1px solid #e2e8f0;">
+    <h3 style="margin-bottom: 1rem; color: #1a202c;">Test Results:</h3>
+    
+    @if (ViewBag.TestResults != null && ((List<string>)ViewBag.TestResults).Any())
+    {
+        <ul style="list-style: none; padding: 0;">
+            @foreach (var result in (List<string>)ViewBag.TestResults)
+            {
+                <li style="padding: 0.5rem; margin-bottom: 0.5rem; background: #f8fafc; border-radius: 6px; border-left: 3px solid @(result.Contains("✓") ? "#10b981" : "#ef4444");">
+                    @result
+                </li>
+            }
+        </ul>
+    }
+    else
+    {
+        <p style="color: #64748b;">No courses with prerequisites found, or you haven't enrolled in any courses yet.</p>
+    }
+    
+    <div style="margin-top: 2rem;">
+        <a href="@Url.Action("BrowseCourses")" class="btn btn-primary">
+            <i class="fas fa-arrow-left"></i> Back to Browse Courses
+        </a>
+    </div>
+</div>
+
+<div style="background: #f8fafc; padding: 1.5rem; border-radius: 8px; margin-top: 2rem; border-left: 4px solid #4f46e5;">
+    <h4 style="margin-bottom: 1rem; color: #1a202c;">How Prerequisites Work:</h4>
+    <ul style="color: #64748b; line-height: 1.6;">
+        <li><strong>✓ Can Enroll:</strong> You have completed or are currently enrolled in the prerequisite course</li>
+        <li><strong>✗ Cannot Enroll:</strong> You haven't enrolled in the prerequisite course yet</li>
+        <li><strong>Status "Active":</strong> You can enroll with a warning (currently taking prerequisite)</li>
+        <li><strong>Status "Completed":</strong> You can enroll without any warnings</li>
+    </ul>
+</div>

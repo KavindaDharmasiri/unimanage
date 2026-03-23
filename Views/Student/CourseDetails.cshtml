@@ -2,10 +2,54 @@
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
     ViewBag.Title = "Course Details";
+    var isEnrolled = (bool)ViewBag.IsEnrolled;
+    var totalAssignments = (int)ViewBag.TotalAssignments;
+    var submittedAssignments = (int)ViewBag.SubmittedAssignments;
+    var pendingAssignments = (int)ViewBag.PendingAssignments;
+    var overdueAssignments = (int)ViewBag.OverdueAssignments;
+    var submissions = (Dictionary<int, uniManage.Models.AssignmentSubmission>)ViewBag.Submissions;
 }
 
 <div class="page-title">@Model.CourseName (@Model.CourseCode)</div>
 <div class="page-subtitle">Course information, materials, and assignments</div>
+
+<!-- Assignment Progress Stats (for enrolled students) -->
+@if (isEnrolled && totalAssignments > 0)
+{
+    <div class="stats-grid" style="margin-bottom: 2rem;">
+        <div class="stat-card">
+            <div class="stat-icon blue">
+                <i class="fas fa-clipboard-list"></i>
+            </div>
+            <div class="stat-value">@totalAssignments</div>
+            <div class="stat-label">Total Assignments</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon green">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="stat-value">@submittedAssignments</div>
+            <div class="stat-label">Submitted</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon orange">
+                <i class="fas fa-clock"></i>
+            </div>
+            <div class="stat-value">@pendingAssignments</div>
+            <div class="stat-label">Pending</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon red">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="stat-value">@overdueAssignments</div>
+            <div class="stat-label">Overdue</div>
+        </div>
+    </div>
+}
 
 <!-- Course Information -->
 <div class="stat-card" style="margin-bottom: 2rem;">
@@ -106,7 +150,7 @@
                     <th>Assignment Details</th>
                     <th>Due Date</th>
                     <th>Max Marks</th>
-                    <th>Attachment</th>
+                    <th>Submission Status</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -115,13 +159,16 @@
                 {
                     var daysUntilDue = (assignment.DueDate - DateTime.Now).Days;
                     var isOverdue = assignment.DueDate < DateTime.Now;
-                    var iconColor = isOverdue ? "#ef4444" : daysUntilDue <= 3 ? "#f59e0b" : "#4f46e5";
+                    var isSubmitted = submissions.ContainsKey(assignment.AssignmentId);
+                    var submission = isSubmitted ? submissions[assignment.AssignmentId] : null;
+                    var isLate = submission != null && submission.IsLateSubmission;
+                    var iconColor = isSubmitted ? (isLate ? "#f59e0b" : "#10b981") : isOverdue ? "#ef4444" : daysUntilDue <= 3 ? "#f59e0b" : "#4f46e5";
                     
                     <tr>
                         <td>
                             <div class="user-info">
                                 <div class="user-avatar-table" style="background: @iconColor;">
-                                    <i class="fas fa-tasks"></i>
+                                    <i class="fas @(isSubmitted ? "fa-check" : "fa-tasks")"></i>
                                 </div>
                                 <div class="user-details">
                                     <h4>@assignment.Title</h4>
@@ -132,14 +179,50 @@
                         <td>
                             <div class="user-details">
                                 <h4>@assignment.DueDate.ToString("MMM dd, yyyy")</h4>
-                                <p>@assignment.DueDate.ToString("HH:mm")</p>
+                                <p>
+                                    @assignment.DueDate.ToString("HH:mm")
+                                    @if (isOverdue && !isSubmitted)
+                                    {
+                                        <span style="color: #ef4444; font-weight: 500;"> (Overdue)</span>
+                                    }
+                                    else if (daysUntilDue == 0 && !isSubmitted)
+                                    {
+                                        <span style="color: #f59e0b; font-weight: 500;"> (Due Today)</span>
+                                    }
+                                    else if (daysUntilDue > 0 && !isSubmitted)
+                                    {
+                                        <span> (@daysUntilDue days left)</span>
+                                    }
+                                </p>
                             </div>
                         </td>
                         <td>
                             <span class="status-badge active">@assignment.MaxMarks Points</span>
                         </td>
                         <td>
-                            @if (!string.IsNullOrEmpty(assignment.FilePath))
+                            @if (isSubmitted)
+                            {
+                                <div>
+                                    @if (isLate)
+                                    {
+                                        <span class="status-badge" style="background: #f59e0b; color: white; font-size: 0.75rem;">
+                                            <i class="fas fa-clock"></i> Late
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="status-badge success" style="font-size: 0.75rem;">
+                                            <i class="fas fa-check"></i> On Time
+                                        </span>
+                                    }
+                                    <div style="font-size: 0.75rem; color: #64748b; margin-top: 0.25rem;">@submission.SubmissionDate.ToString("MMM dd, HH:mm")</div>
+                                    @if (submission.Grade.HasValue)
+                                    {
+                                        <div style="font-size: 0.75rem; color: #10b981; margin-top: 0.25rem; font-weight: 500;">Grade: @submission.Grade/@assignment.MaxMarks</div>
+                                    }
+                                </div>
+                            }
+                            else if (!string.IsNullOrEmpty(assignment.FilePath))
                             {
                                 <a href="@assignment.FilePath" class="btn-manage" style="color: #10b981;" download>Download</a>
                             }
@@ -149,7 +232,16 @@
                             }
                         </td>
                         <td>
-                            <a href="@Url.Action("SubmitAssignment", "Student", new { id = assignment.AssignmentId })" class="btn-manage" style="color: @iconColor;">Submit</a>
+                            @if (isSubmitted)
+                            {
+                                <a href="@Url.Action("SubmitAssignment", "Student", new { id = assignment.AssignmentId })" class="btn-manage" style="color: #4f46e5;">View Submission</a>
+                            }
+                            else
+                            {
+                                <a href="@Url.Action("SubmitAssignment", "Student", new { id = assignment.AssignmentId })" class="btn-manage" style="color: @iconColor;">
+                                    @(isOverdue ? "Submit Late" : "Submit")
+                                </a>
+                            }
                         </td>
                     </tr>
                 }

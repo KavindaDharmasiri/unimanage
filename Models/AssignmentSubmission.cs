@@ -23,6 +23,10 @@ namespace uniManage.Models
         public int? Grade { get; set; }
 
         public string Feedback { get; set; }
+        
+        public bool IsLateSubmission { get; set; }
+        
+        public int? DaysLate { get; set; }
 
         public virtual Assignment Assignment { get; set; }
         public virtual Student Student { get; set; }
